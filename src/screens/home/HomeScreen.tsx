@@ -19,6 +19,7 @@ import {
   toastService,
   actionSheetService,
 } from "fluent-styles";
+import { Text } from "../../components";
 import { useColors } from "../../constants";
 import { DAYS, DAY_LABELS } from "../../db/schema";
 import { useSubjects } from "../../hooks";
@@ -44,18 +45,17 @@ function SubjectCard({
       <Stack flexDirection="row" gap={0} marginBottom={12}>
         {/* Time column */}
         <Stack
-          width={56}
           alignItems="flex-end"
           paddingRight={12}
           paddingTop={4}
           gap={2}
         >
-          <StyledText fontSize={12} fontWeight="700" color={Colors.textPrimary}>
+          <Text variant="label" color={Colors.textPrimary}>
             {subject.startTime}
-          </StyledText>
-          <StyledText fontSize={10} color={Colors.textMuted}>
+          </Text>
+          <Text variant="caption" color={Colors.textMuted}>
             {subject.endTime}
-          </StyledText>
+          </Text>
         </Stack>
 
         {/* Timeline dot + line */}
@@ -109,15 +109,14 @@ function SubjectCard({
                   alignItems="center"
                   justifyContent="space-between"
                 >
-                  <StyledText
-                    fontSize={15}
-                    fontWeight="800"
+                  <Text
+                    variant="subtitle"
                     color={Colors.textPrimary}
                     flex={1}
                     numberOfLines={1}
                   >
                     {subject.name}
-                  </StyledText>
+                  </Text>
                   {subject.reminder && (
                     <Stack
                       flexDirection="row"
@@ -129,13 +128,12 @@ function SubjectCard({
                       backgroundColor={subject.color + "22"}
                     >
                       <StyledText fontSize={12}>🔔</StyledText>
-                      <StyledText
-                        fontSize={11}
-                        fontWeight="700"
+                      <Text
+                        variant="caption"
                         color={subject.color}
                       >
                         {subject.reminder}m
-                      </StyledText>
+                      </Text>
                     </Stack>
                   )}
                 </Stack>
@@ -144,17 +142,17 @@ function SubjectCard({
                   {subject.teacher ? (
                     <Stack flexDirection="row" alignItems="center" gap={4}>
                       <StyledText fontSize={12}>👤</StyledText>
-                      <StyledText fontSize={12} color={Colors.textSecondary}>
+                      <Text variant="bodySmall" color={Colors.textSecondary}>
                         {subject.teacher}
-                      </StyledText>
+                      </Text>
                     </Stack>
                   ) : null}
                   {subject.room ? (
                     <Stack flexDirection="row" alignItems="center" gap={4}>
                       <StyledText fontSize={12}>📍</StyledText>
-                      <StyledText fontSize={12} color={Colors.textSecondary}>
+                      <Text variant="bodySmall" color={Colors.textSecondary}>
                         {subject.room}
-                      </StyledText>
+                      </Text>
                     </Stack>
                   ) : null}
                 </Stack>
@@ -199,14 +197,13 @@ function DayChip({
           elevation: 4,
         }}
       >
-        <StyledText
-          fontSize={13}
-          fontWeight="800"
-          color="#fff"
+        <Text
+          variant="button"
+          color={Colors.white}
           letterSpacing={0.2}
         >
           {DAY_LABELS[day]}
-        </StyledText>
+        </Text>
       </StyledPressable>
     );
   }
@@ -221,13 +218,12 @@ function DayChip({
       borderRadius={999}
       onPress={onPress}
     >
-      <StyledText
-        fontSize={13}
-        fontWeight="600"
+      <Text
+        variant="subLabel"
         color={isToday ? Colors.primary : Colors.textMuted}
       >
         {DAY_LABELS[day]}
-      </StyledText>
+      </Text>
       {isToday && (
         <Stack
           width={4}
@@ -313,12 +309,11 @@ export default function HomeScreen() {
   );
 
   return (
-    <StyledPage flex={1} backgroundColor={theme.colors.gray[100]}>
+    <StyledPage flex={1} backgroundColor={Colors.bg}>
       {/* ── Header ──────────────────────────────────────────────── */}
       <Stack
-        backgroundColor={theme.colors.gray[100]}
-        paddingHorizontal={20}
-        paddingTop={16}
+        backgroundColor={Colors.bg}
+        paddingHorizontal={8}
         borderBottomColor={Colors.border}
       >
         {/* Title row */}
@@ -337,18 +332,17 @@ export default function HomeScreen() {
               <Svg width={18} height={18} viewBox="0 0 24 24" fill="none">
                 <Path
                   d="M13 2L4.09 12.97A1 1 0 005 14.5h6.5L11 22l8.91-10.97A1 1 0 0019 9.5h-6.5L13 2z"
-                  fill="#fff"
+                  fill={Colors.white}
                 />
               </Svg>
             </Stack>
-            <StyledText
-              fontSize={22}
-              fontWeight="800"
+            <Text
+              variant="header"
               color={Colors.textPrimary}
               letterSpacing={-0.5}
             >
               Kronos
-            </StyledText>
+            </Text>
           </Stack>
 
           {/* Right — import + share buttons */}
@@ -430,25 +424,13 @@ export default function HomeScreen() {
           </Stack>
         </Stack>
 
-        <StyledSpacer marginVertical={8} />
-
+        <StyledSpacer marginVertical={12} />
         {/* Day chips — horizontal scroll */}
-      </Stack>
-      <Stack
-        alignItems="center"
-        borderRadius={32}
-        backgroundColor={Colors.bgCard}
-        paddingHorizontal={8}
-        paddingVertical={8}
-        borderBottomWidth={1}
-        marginHorizontal={8}
-        borderBottomColor={Colors.border}
-      >
         <ScrollView
           ref={chipScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 1, paddingRight: 8 }}
+          contentContainerStyle={{ flexDirection: 'row', flex: 1, borderRadius:8, paddingBottom: 8, backgroundColor: Colors.bgCard }}
         >
           {DAYS.map((day) => (
             <DayChip

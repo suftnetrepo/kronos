@@ -105,7 +105,7 @@ export function ShareTimetableContent() {
               size={200}
               color="#111827"
               backgroundColor="#fff"
-              getRef={qrRef}
+              ref={qrRef}
             />
           ) : (
             <Stack width={200} height={200} alignItems="center" justifyContent="center">
@@ -133,25 +133,25 @@ export function ShareTimetableContent() {
       {/* Action buttons */}
       <Stack gap={10}>
         <StyledPressable
-          horizontal alignItems="center" justifyContent="center" gap={10}
+          flexDirection="row" alignItems="center" justifyContent="center" gap={10}
           paddingVertical={14} borderRadius={14}
           backgroundColor={Colors.primary}
           onPress={handleCopyCode}
         >
-          <StyledText fontSize={16}>📋</StyledText>
+          <StyledText fontSize={15} fontWeight="700" color="#fff">📋</StyledText>
           <StyledText fontSize={15} fontWeight="700" color="#fff">
             Copy code
           </StyledText>
         </StyledPressable>
 
         <StyledPressable
-          horizontal alignItems="center" justifyContent="center" gap={10}
+          flexDirection="row" alignItems="center" justifyContent="center" gap={10}
           paddingVertical={14} borderRadius={14}
           backgroundColor={Colors.bgMuted}
           borderWidth={1} borderColor={Colors.border}
           onPress={handleShareFile}
         >
-          <StyledText fontSize={16}>📤</StyledText>
+          <StyledText fontSize={15} fontWeight="700" color={Colors.textPrimary}>📤</StyledText>
           <StyledText fontSize={15} fontWeight="700" color={Colors.textPrimary}>
             Share file
           </StyledText>

@@ -14,6 +14,8 @@ import {
   scheduleSubjectReminders,
   cancelSubjectReminders,
   requestNotificationPermission,
+  storeReminderIds,
+  getStoredReminderIds,
 } from '../../services/notificationService'
 import { subjectService } from '../../services/subjectService'
 import type { Day, Subject } from '../../db/schema'
@@ -98,6 +100,12 @@ export function EditSubjectSheet({ subjectId, visible, onClose, onDeleted }: Edi
 
     const id = loaderService.show({ label: 'Saving…', variant: 'spinner' })
     try {
+      // Cancel old reminders before saving
+      const oldReminderIds = await getStoredReminderIds(subjectId)
+      if (oldReminderIds.length > 0) {
+        await cancelSubjectReminders(oldReminderIds)
+      }
+
       await update(subjectId, {
         name:      name.trim(),
         teacher:   teacher.trim() || null,
@@ -109,10 +117,16 @@ export function EditSubjectSheet({ subjectId, visible, onClose, onDeleted }: Edi
         reminder:  reminderOn ? reminder : null,
       })
 
-      // Reschedule notifications
+      // Reschedule notifications and store new IDs
       if (reminderOn && reminder) {
         const updated = await subjectService.getById(subjectId)
-        if (updated) await scheduleSubjectReminders(updated)
+        if (updated) {
+          const newReminderIds = await scheduleSubjectReminders(updated)
+          await storeReminderIds(subjectId, newReminderIds)
+        }
+      } else {
+        // Clear reminder IDs if reminders are turned off
+        await storeReminderIds(subjectId, [])
       }
 
       invalidateData()
@@ -136,6 +150,12 @@ export function EditSubjectSheet({ subjectId, visible, onClose, onDeleted }: Edi
     if (!ok) return
     const loadId = loaderService.show({ label: 'Deleting…', variant: 'spinner' })
     try {
+      // Cancel reminders before deleting
+      const reminderIds = await getStoredReminderIds(subjectId)
+      if (reminderIds.length > 0) {
+        await cancelSubjectReminders(reminderIds)
+      }
+      
       await remove(subjectId)
       toastService.success('Subject deleted')
       onDeleted()

@@ -66,3 +66,7 @@ export const usePremiumStore = create<PremiumState>((set) => ({
   setEntitlement: (active, plan) => set({ isPremium: active, plan, loading: false }),
   setLoading:     (v)            => set({ loading: v }),
 }))
+
+// ─── Settings store (Phase 2) ─────────────────────────────────────────────────
+
+export { useSettingsStore } from './settings.store'

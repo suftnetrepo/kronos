@@ -49,4 +49,13 @@ export const SQL_MIGRATIONS = [
 
   INSERT OR IGNORE INTO settings (id, first_day_of_week, updated_at)
   VALUES ('singleton', 'MON', ${Date.now()});`,
+
+  // Migration 002 — add app-level settings (Phase 2)
+  `ALTER TABLE settings ADD COLUMN lock_enabled INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE settings ADD COLUMN biometric_enabled INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE settings ADD COLUMN reminders_enabled INTEGER NOT NULL DEFAULT 1;
+  ALTER TABLE settings ADD COLUMN downloaded_export_path TEXT;`,
+
+  // Migration 003 — add reminder IDs tracking to subjects (Phase 3)
+  `ALTER TABLE subjects ADD COLUMN reminder_ids TEXT;`,
 ]

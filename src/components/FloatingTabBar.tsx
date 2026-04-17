@@ -50,7 +50,7 @@ export function FloatingTabBar({ state, navigation }: FloatingTabBarProps) {
   return (
     <View
       style={{
-        backgroundColor:  'transparent',
+        backgroundColor:  Colors.bg,
         paddingBottom:    insets.bottom,
         paddingTop:       8,
         paddingHorizontal: 20,
@@ -62,7 +62,7 @@ export function FloatingTabBar({ state, navigation }: FloatingTabBarProps) {
         backgroundColor={Colors.bgCard}
         borderRadius={999}
         style={{
-          shadowColor:   '#000',
+          shadowColor:   Colors.primaryDark,
           shadowOffset:  { width: 0, height: 4 },
           shadowOpacity: 0.10,
           shadowRadius:  20,
@@ -108,8 +108,8 @@ export function FloatingTabBar({ state, navigation }: FloatingTabBarProps) {
                   elevation:     5,
                 }}
               >
-                {tab.icon('#ffffff', true)}
-                {/* <StyledText fontSize={12} fontWeight="700" color="#ffffff" numberOfLines={1}>
+                {tab.icon(Colors.white, true)}
+                {/* <StyledText fontSize={12} fontWeight="700" color={Colors.white} numberOfLines={1}>
                   {tab.label}
                 </StyledText> */}
               </StyledPressable>
@@ -126,7 +126,7 @@ export function FloatingTabBar({ state, navigation }: FloatingTabBarProps) {
               borderRadius={999}
               onPress={onPress}
             >
-              {tab.icon(Colors.textMuted, false)}
+              {tab.icon(Colors.textSecondary, false)}
             </StyledPressable>
           )
         })}

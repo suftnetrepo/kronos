@@ -14,6 +14,7 @@ import { usePremium } from '../../hooks/usePremium'
 import {
   scheduleSubjectReminders,
   requestNotificationPermission,
+  storeReminderIds,
 } from '../../services/notificationService'
 import type { Day } from '../../db/schema'
 
@@ -110,7 +111,10 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
         sortOrder: 0,
       })
       if (reminderOn && reminder && subject) {
-        await scheduleSubjectReminders(subject)
+        const reminderIds = await scheduleSubjectReminders(subject)
+        if (reminderIds.length > 0) {
+          await storeReminderIds(subject.id, reminderIds)
+        }
       }
       toastService.success('Subject added!')
       reset()

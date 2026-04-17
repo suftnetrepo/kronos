@@ -86,13 +86,13 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
           </Stack>
 
           {/* Header */}
-          <Stack horizontal alignItems="center" justifyContent="space-between"
+          <Stack flexDirection='row' alignItems="center" justifyContent="space-between"
             paddingHorizontal={20} paddingVertical={14}
             borderBottomWidth={1} borderBottomColor={Colors.border}>
             <StyledPressable onPress={() => { reset(); onClose() }}>
               <StyledText fontSize={15} color={Colors.textMuted} fontWeight="600">Cancel</StyledText>
             </StyledPressable>
-            <StyledText fontSize={17} fontWeight="800" color={Colors.textPrimary}>Add Exam</StyledText>
+            <StyledText fontSize={17} fontWeight="800" color={Colors.textPrimary}> Exam</StyledText>
             <StyledPressable onPress={handleSave}>
               <StyledText fontSize={15} color={Colors.primary} fontWeight="700">Save</StyledText>
             </StyledPressable>
@@ -119,7 +119,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
                 SUBJECT
               </StyledText>
               <StyledPressable
-                horizontal alignItems="center" justifyContent="space-between"
+                flexDirection='row' alignItems="center" justifyContent="space-between"
                 paddingHorizontal={16} paddingVertical={14}
                 borderRadius={12} backgroundColor={Colors.bgInput}
                 onPress={() => setShowSubjects(true)}
@@ -145,7 +145,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
                 DATE
               </StyledText>
               <StyledPressable
-                horizontal alignItems="center" justifyContent="space-between"
+                flexDirection='row' alignItems="center" justifyContent="space-between"
                 paddingHorizontal={16} paddingVertical={14}
                 borderRadius={12} backgroundColor={Colors.bgInput}
                 onPress={() => setShowDate(true)}
@@ -253,7 +253,7 @@ function SubjectPickerModal({ subjects, selected, onSelect, onClose }: {
           <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
             {/* No subject option */}
             <StyledPressable
-              horizontal alignItems="center" gap={14}
+              flexDirection='row' alignItems="center" gap={14}
               paddingHorizontal={20} paddingVertical={14}
               backgroundColor={!selected ? Colors.primary + '12' : 'transparent'}
               onPress={() => onSelect(null)}
@@ -268,7 +268,7 @@ function SubjectPickerModal({ subjects, selected, onSelect, onClose }: {
             {subjects.map(s => (
               <StyledPressable
                 key={s.id}
-                horizontal alignItems="center" gap={14}
+                flexDirection='row' alignItems="center" gap={14}
                 paddingHorizontal={20} paddingVertical={14}
                 backgroundColor={selected === s.id ? Colors.primary + '12' : 'transparent'}
                 onPress={() => onSelect(s.id)}

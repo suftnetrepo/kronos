@@ -12,8 +12,10 @@ import {
 } from "@expo-google-fonts/plus-jakarta-sans";
 import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { runMigrations } from "../src/db";
-import { useThemeStore, usePremiumStore } from "../src/stores";
+import { useThemeStore, usePremiumStore, useSettingsStore } from "../src/stores";
 import { getEntitlement } from "../src/services/premiumService";
+import { rescheduleAllReminders } from "../src/services/notificationService";
+import { initializePurchaseManager } from "../src/config/premium.config";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -57,6 +59,7 @@ export default function RootLayout() {
   const [appReady, setAppReady] = useState(false);
   const { loadTheme } = useThemeStore();
   const { setEntitlement } = usePremiumStore();
+  const { hydrate: hydrateSettings } = useSettingsStore();
 
   const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_400Regular,
@@ -69,10 +72,15 @@ export default function RootLayout() {
   useEffect(() => {
     const bootstrap = async () => {
       try {
+        // Initialize purchase manager (mock or RevenueCat depending on environment)
+        await initializePurchaseManager();
         await loadTheme();
         const entitlement = await getEntitlement();
         setEntitlement(entitlement.isActive, entitlement.plan);
         await runMigrations();
+        await hydrateSettings();
+        // Reschedule reminders on app startup
+        await rescheduleAllReminders();
       } catch (e) {
         console.error("[Kronos Bootstrap]", e);
       } finally {

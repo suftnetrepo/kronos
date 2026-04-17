@@ -161,12 +161,12 @@ export const THEMES: Record<ThemeKey, AppColors> = {
   rose:     RoseTheme,
 }
 
-export const THEME_META: Record<ThemeKey, { label: string; emoji: string; preview: string[] }> = {
-  indigo:   { label: 'Kronos',   emoji: '⚡', preview: [palettes.indigo[600],  palettes.indigo[400],  '#F5F5F7'] },
-  ocean:    { label: 'Ocean',    emoji: '🌊', preview: [palettes.blue[600],    palettes.blue[400],    palettes.blueGray[50]] },
-  forest:   { label: 'Forest',   emoji: '🌿', preview: [palettes.green[700],   palettes.green[500],   palettes.warmGray[50]] },
-  midnight: { label: 'Midnight', emoji: '🌙', preview: [palettes.violet[400],  palettes.violet[300],  palettes.blueGray[900]] },
-  rose:     { label: 'Rose',     emoji: '🌸', preview: [palettes.rose[500],    palettes.pink[300],    '#FDF6F7'] },
+export const THEME_META: Record<ThemeKey, { label: string; emoji: string; preview: string[]; description: string }> = {
+  indigo:   { label: 'Kronos',   emoji: '⚡', preview: [palettes.indigo[600],  palettes.indigo[400],  '#F5F5F7'], description: 'Clean and powerful — the default' },
+  ocean:    { label: 'Ocean',    emoji: '🌊', preview: [palettes.blue[600],    palettes.blue[400],    palettes.blueGray[50]], description: 'Calm blues & serene waters' },
+  forest:   { label: 'Forest',   emoji: '🌿', preview: [palettes.green[700],   palettes.green[500],   palettes.warmGray[50]], description: 'Natural greens & earthy tones' },
+  midnight: { label: 'Midnight', emoji: '🌙', preview: [palettes.violet[400],  palettes.violet[300],  palettes.blueGray[900]], description: 'Dark mode with violet accents' },
+  rose:     { label: 'Rose',     emoji: '🌸', preview: [palettes.rose[500],    palettes.pink[300],    '#FDF6F7'], description: 'Warm pinks & mauves' },
 }
 
 // ─── Subject colour palette — for the colour picker ───────────────────────────

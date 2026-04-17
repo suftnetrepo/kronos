@@ -1,0 +1,2 @@
+export { Text } from './text'
+export type { AppTextProps, TextVariant } from './text'

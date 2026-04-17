@@ -17,25 +17,30 @@ import { format, differenceInDays, isToday, isTomorrow } from "date-fns";
 import { useColors } from "../../constants";
 import { useExams } from "../../hooks/useExams";
 import { useSubjects } from "../../hooks";
+import { Text } from "../../components";
 import type { Exam } from "../../db/schema";
 import { AddExamSheet } from "./AddExamSheet";
 import { EditExamSheet } from "./EditExamSheet";
 
 // ─── Countdown badge helpers ───────────────────────────────────────────────────
-function countdownLabel(date: Date): {
+function countdownLabel(
+  date: Date,
+  Colors: ReturnType<typeof useColors>
+): {
   text: string;
   color: string;
   bg: string;
 } {
   if (isToday(date))
-    return { text: "Today!", color: "#EF4444", bg: "#EF444420" };
+    return { text: "Today!", color: Colors.error, bg: Colors.error + "33" };
   if (isTomorrow(date))
-    return { text: "Tomorrow", color: "#F97316", bg: "#F9731620" };
+    return { text: "Tomorrow", color: Colors.warning, bg: Colors.warning + "33" };
   const days = differenceInDays(date, new Date());
-  if (days <= 7) return { text: `${days}d`, color: "#EAB308", bg: "#EAB30820" };
+  if (days <= 7)
+    return { text: `${days}d`, color: Colors.warning, bg: Colors.warning + "33" };
   if (days <= 30)
-    return { text: `${days}d`, color: "#6B7280", bg: "#6B728016" };
-  return { text: format(date, "MMM d"), color: "#6B7280", bg: "#6B728016" };
+    return { text: `${days}d`, color: Colors.textMuted, bg: Colors.textMuted + "20" };
+  return { text: format(date, "MMM d"), color: Colors.textMuted, bg: Colors.textMuted + "20" };
 }
 
 // ─── Single exam row ───────────────────────────────────────────────────────────
@@ -56,7 +61,7 @@ function ExamRow({
 }) {
   const Colors = useColors();
   const date = new Date(exam.date);
-  const cd = isPast ? null : countdownLabel(date);
+  const cd = isPast ? null : countdownLabel(date, Colors);
 
   return (
     <StyledPressable
@@ -86,14 +91,13 @@ function ExamRow({
 
         {/* Content */}
         <Stack flex={1} gap={4}>
-          <StyledText
-            fontSize={14}
-            fontWeight="700"
+          <Text
+            variant="label"
             color={Colors.textPrimary}
             numberOfLines={1}
           >
             {exam.title}
-          </StyledText>
+          </Text>
           <Stack horizontal alignItems="center" gap={8} flexWrap="wrap">
             {/* Subject badge */}
             <Stack
@@ -102,19 +106,19 @@ function ExamRow({
               borderRadius={6}
               backgroundColor={subjectColor + "20"}
             >
-              <StyledText fontSize={11} fontWeight="700" color={subjectColor}>
+              <Text variant="caption" fontWeight="700" color={subjectColor}>
                 {subjectName}
-              </StyledText>
+              </Text>
             </Stack>
             {/* Date */}
-            <StyledText fontSize={11} fontWeight="600" color={Colors.textMuted}>
+            <Text variant="caption" fontWeight="600" color={Colors.textMuted}>
               {format(date, "EEE, MMM d")}
-            </StyledText>
+            </Text>
             {/* Room */}
             {exam.room ? (
-              <StyledText fontSize={11} color={Colors.textMuted}>
+              <Text variant="caption" color={Colors.textMuted}>
                 📍 {exam.room}
-              </StyledText>
+              </Text>
             ) : null}
           </Stack>
         </Stack>
@@ -127,9 +131,9 @@ function ExamRow({
             borderRadius={20}
             backgroundColor={cd.bg}
           >
-            <StyledText fontSize={12} fontWeight="800" color={cd.color}>
+            <Text variant="button" color={cd.color}>
               {cd.text}
-            </StyledText>
+            </Text>
           </Stack>
         )}
       </Stack>
@@ -148,23 +152,22 @@ function SectionLabel({ label, count }: { label: string; count: number }) {
       paddingTop={20}
       paddingBottom={8}
     >
-      <StyledText
-        fontSize={14}
-        fontWeight="700"
+      <Text
+        variant="label"
         color={Colors.textMuted}
         letterSpacing={0.5}
       >
         {label}
-      </StyledText>
+      </Text>
       <Stack
         paddingHorizontal={7}
         paddingVertical={2}
         borderRadius={10}
         backgroundColor={Colors.border}
       >
-        <StyledText fontSize={14} fontWeight="700" color={Colors.textMuted}>
+        <Text variant="label" color={Colors.textMuted}>
           {count}
-        </StyledText>
+        </Text>
       </Stack>
     </Stack>
   );
@@ -225,24 +228,28 @@ export default function ExamsScreen() {
         marginHorizontal={16}
         borderRadius={30}
         paddingRight={8}
-        backgroundColor={theme.colors.gray[1]}
         paddingVertical={8}
-        showBackArrow
         backArrowProps={{ onPress: () => router.back() }}
         shapeProps={{
           size: 40,
-          backgroundColor: theme.colors.gray[1],
-          borderColor: theme.colors.gray[300],
+          backgroundColor: Colors.bgCard,
+          borderColor: Colors.border,
           borderWidth: 0.5,
         }}
         title="Exams"
         titleAlignment="left"
+        titleProps={{
+          color: Colors.textPrimary,
+          fontSize : 20,
+          fontWeight: "700",
+          fontFamily: "PlusJakartaSans_700Bold",
+        }}
         rightIcon={
           past.length > 0 ? (
             <StyledPressable onPress={() => setShowPast((v) => !v)}>
-              <StyledText fontSize={13} fontWeight="600" color={Colors.primary}>
+              <Text variant="label" color={Colors.primary}>
                 {showPast ? "Hide past" : "Show past"}
-              </StyledText>
+              </Text>
             </StyledPressable>
           ) : undefined
         }
@@ -311,13 +318,13 @@ export default function ExamsScreen() {
                 gap={6}
               >
                 <StyledText fontSize={36}>🎉</StyledText>
-                <StyledText
-                  fontSize={14}
+                <Text
+                  variant="body"
                   fontWeight="600"
                   color={Colors.textMuted}
                 >
                   No upcoming exams
-                </StyledText>
+                </Text>
               </Stack>
             )}
 

@@ -18,6 +18,8 @@ export const subjects = sqliteTable('subjects', {
   endTime:     text('end_time').notNull(),      // "10:30"
   // Reminder: null = off, 5/10/15/30/60 = minutes before
   reminder:    integer('reminder'),
+  // Reminder notification IDs (JSON array of strings, stored as text)
+  reminderIds: text('reminder_ids'),             // e.g. '["id1","id2","id3"]' or null
   notes:       text('notes'),
   sortOrder:   integer('sort_order').notNull().default(0),
   createdAt:   integer('created_at', { mode: 'timestamp' }).notNull(),
@@ -53,13 +55,20 @@ export const exams = sqliteTable('exams', {
 })
 
 // ─── Settings (singleton) ─────────────────────────────────────────────────────
+// Stores both timetable settings (firstDayOfWeek, semesterStart/End) and
+// app-level settings (lockEnabled, biometricEnabled, remindersEnabled)
 
 export const settings = sqliteTable('settings', {
-  id:              text('id').primaryKey().default('singleton'),
-  firstDayOfWeek:  text('first_day_of_week').notNull().default('MON'),
-  semesterStart:   integer('semester_start', { mode: 'timestamp' }),
-  semesterEnd:     integer('semester_end', { mode: 'timestamp' }),
-  updatedAt:       integer('updated_at', { mode: 'timestamp' }).notNull(),
+  id:                   text('id').primaryKey().default('singleton'),
+  firstDayOfWeek:       text('first_day_of_week').notNull().default('MON'),
+  semesterStart:        integer('semester_start', { mode: 'timestamp' }),
+  semesterEnd:          integer('semester_end', { mode: 'timestamp' }),
+  // App-level settings
+  lockEnabled:          integer('lock_enabled', { mode: 'boolean' }).notNull().default(false),
+  biometricEnabled:     integer('biometric_enabled', { mode: 'boolean' }).notNull().default(false),
+  remindersEnabled:     integer('reminders_enabled', { mode: 'boolean' }).notNull().default(true),
+  downloadedExportPath: text('downloaded_export_path'),
+  updatedAt:            integer('updated_at', { mode: 'timestamp' }).notNull(),
 })
 
 // ─── Types ────────────────────────────────────────────────────────────────────
