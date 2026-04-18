@@ -510,7 +510,7 @@ export function generateImportPreview(
 
 export function payloadToSubjects(
   payload: TimetablePayload
-): Omit<Subject, 'id' | 'createdAt' | 'updatedAt' | 'sortOrder'>[] {
+): Omit<Subject, 'id' | 'createdAt' | 'updatedAt' | 'sortOrder' | 'reminderIds'>[] {
   return payload.ss.map(s => ({
     name:      s.n,
     teacher:   s.t,
