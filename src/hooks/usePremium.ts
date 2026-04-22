@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { usePremiumStore } from '../stores'
+import { usePremiumStore, usePurchaseReadinessStore } from '../stores'
 import {
   purchaseMonthly, purchaseYearly, purchaseLifetime,
   restorePurchases, getEntitlement,
@@ -9,6 +9,7 @@ import { FREE_LIMITS } from '../constants/premium'
 
 export function usePremium() {
   const { isPremium, plan, setEntitlement } = usePremiumStore()
+  const { isReady, isLoading: purchaseInitLoading, error: purchaseInitError } = usePurchaseReadinessStore()
 
   const refresh = useCallback(async () => {
     const info = await getEntitlement()
@@ -16,6 +17,14 @@ export function usePremium() {
   }, [setEntitlement])
 
   const buyMonthly = useCallback(async () => {
+    if (!isReady) {
+      const msg = purchaseInitError 
+        ? `Store unavailable: ${purchaseInitError}`
+        : 'Store is loading. Please wait...'
+      toastService.error('Cannot purchase', msg)
+      return false
+    }
+    
     try {
       await loaderService.wrap(
         () => purchaseMonthly(),
@@ -28,9 +37,17 @@ export function usePremium() {
       toastService.error('Purchase failed', err?.message)
       return false
     }
-  }, [refresh])
+  }, [isReady, purchaseInitError, refresh])
 
   const buyYearly = useCallback(async () => {
+    if (!isReady) {
+      const msg = purchaseInitError 
+        ? `Store unavailable: ${purchaseInitError}`
+        : 'Store is loading. Please wait...'
+      toastService.error('Cannot purchase', msg)
+      return false
+    }
+    
     try {
       await loaderService.wrap(
         () => purchaseYearly(),
@@ -43,9 +60,17 @@ export function usePremium() {
       toastService.error('Purchase failed', err?.message)
       return false
     }
-  }, [refresh])
+  }, [isReady, purchaseInitError, refresh])
 
   const buyLifetime = useCallback(async () => {
+    if (!isReady) {
+      const msg = purchaseInitError 
+        ? `Store unavailable: ${purchaseInitError}`
+        : 'Store is loading. Please wait...'
+      toastService.error('Cannot purchase', msg)
+      return false
+    }
+    
     try {
       await loaderService.wrap(
         () => purchaseLifetime(),
@@ -58,9 +83,17 @@ export function usePremium() {
       toastService.error('Purchase failed', err?.message)
       return false
     }
-  }, [refresh])
+  }, [isReady, purchaseInitError, refresh])
 
   const restore = useCallback(async () => {
+    if (!isReady) {
+      const msg = purchaseInitError 
+        ? `Store unavailable: ${purchaseInitError}`
+        : 'Store is loading. Please wait...'
+      toastService.error('Cannot restore', msg)
+      return false
+    }
+    
     try {
       const restored = await loaderService.wrap(
         () => restorePurchases(),
@@ -77,7 +110,7 @@ export function usePremium() {
       toastService.error('Restore failed', err?.message)
       return false
     }
-  }, [refresh])
+  }, [isReady, purchaseInitError, refresh])
 
   return {
     isPremium,
@@ -88,6 +121,10 @@ export function usePremium() {
     buyLifetime,
     restore,
     limits: FREE_LIMITS,
+    // Purchase manager state (for UI feedback)
+    purchaseManagerReady: isReady,
+    purchaseManagerLoading: purchaseInitLoading,
+    purchaseManagerError: purchaseInitError,
     // Gate helpers — call with current count to check if action is allowed
     canAddSubject:  (count: number) => isPremium || count < FREE_LIMITS.SUBJECTS,
     canAddHomework: (count: number) => isPremium || count < FREE_LIMITS.HOMEWORK_MONTH,

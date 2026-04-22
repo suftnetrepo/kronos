@@ -2,7 +2,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import { ScrollView, Modal } from "react-native";
 import {
   Stack,
-  StyledText,
   StyledPressable,
   StyledTextInput,
   StyledDatePicker,
@@ -12,6 +11,7 @@ import {
 } from "fluent-styles";
 import { toastService, loaderService, dialogueService } from "fluent-styles";
 import { format } from "date-fns";
+import { Text } from "../../components/text";
 import { useColors } from "../../constants";
 import { EXAM_REMINDER_OPTIONS } from "../../constants";
 import { useExams } from "../../hooks/useExams";
@@ -161,25 +161,17 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
             borderBottomColor={Colors.border}
           >
             <StyledPressable onPress={onClose}>
-              <StyledText
-                fontSize={15}
-                color={Colors.textMuted}
-                fontWeight="600"
-              >
+              <Text variant="button" color={Colors.textMuted}>
                 Cancel
-              </StyledText>
+              </Text>
             </StyledPressable>
-            <StyledText
-              fontSize={17}
-              fontWeight="800"
-              color={Colors.textPrimary}
-            >
+            <Text variant="title" color={Colors.textPrimary}>
               Edit Exam
-            </StyledText>
+            </Text>
             <StyledPressable onPress={handleSave}>
-              <StyledText fontSize={15} color={Colors.primary} fontWeight="700">
+              <Text variant="button" color={Colors.primary}>
                 Save
-              </StyledText>
+              </Text>
             </StyledPressable>
           </Stack>
 
@@ -189,14 +181,9 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
           >
             {/* Title */}
             <Stack gap={6} marginBottom={16}>
-              <StyledText
-                fontSize={12}
-                fontWeight="700"
-                color={Colors.textMuted}
-                letterSpacing={0.5}
-              >
+              <Text variant="overline" color={Colors.textMuted}>
                 TITLE *
-              </StyledText>
+              </Text>
               <StyledTextInput
                 variant="filled"
                 placeholder="e.g. Midterm Exam"
@@ -209,14 +196,9 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
             <StyledForm>
               {/* Subject picker */}
               <Stack gap={6} marginBottom={16}>
-                <StyledText
-                  fontSize={12}
-                  fontWeight="700"
-                  color={Colors.textMuted}
-                  letterSpacing={0.5}
-                >
+                <Text variant="overline" color={Colors.textMuted}>
                   SUBJECT
-                </StyledText>
+                </Text>
                 <StyledPressable
                   flexDirection="row"
                   alignItems="center"
@@ -235,35 +217,26 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                         borderRadius={6}
                         backgroundColor={selectedSubject.color}
                       />
-                      <StyledText
-                        fontSize={15}
-                        fontWeight="600"
-                        color={Colors.textPrimary}
-                      >
+                      <Text variant="label" color={Colors.textPrimary}>
                         {selectedSubject.name}
-                      </StyledText>
+                      </Text>
                     </Stack>
                   ) : (
-                    <StyledText fontSize={15} color={Colors.textMuted}>
+                    <Text variant="body" color={Colors.textMuted}>
                       Select subject (optional)
-                    </StyledText>
+                    </Text>
                   )}
-                  <StyledText fontSize={14} color={Colors.textMuted}>
+                  <Text variant="body" color={Colors.textMuted}>
                     ›
-                  </StyledText>
+                  </Text>
                 </StyledPressable>
               </Stack>
 
               {/* Date */}
               <Stack gap={6} marginBottom={16}>
-                <StyledText
-                  fontSize={12}
-                  fontWeight="700"
-                  color={Colors.textMuted}
-                  letterSpacing={0.5}
-                >
+                <Text variant="overline" color={Colors.textMuted}>
                   DATE
-                </StyledText>
+                </Text>
                 <StyledPressable
                   flexDirection="row"
                   alignItems="center"
@@ -274,29 +247,20 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                   backgroundColor={Colors.bgInput}
                   onPress={() => setShowDate(true)}
                 >
-                  <StyledText
-                    fontSize={15}
-                    fontWeight="600"
-                    color={Colors.textPrimary}
-                  >
+                  <Text variant="label" color={Colors.textPrimary}>
                     📅 {format(examDate, "EEE, MMM d, yyyy")}
-                  </StyledText>
-                  <StyledText fontSize={14} color={Colors.textMuted}>
+                  </Text>
+                  <Text variant="body" color={Colors.textMuted}>
                     ›
-                  </StyledText>
+                  </Text>
                 </StyledPressable>
               </Stack>
 
               {/* Room */}
               <Stack gap={6} marginBottom={16}>
-                <StyledText
-                  fontSize={12}
-                  fontWeight="700"
-                  color={Colors.textMuted}
-                  letterSpacing={0.5}
-                >
+                <Text variant="overline" color={Colors.textMuted}>
                   ROOM (OPTIONAL)
-                </StyledText>
+                </Text>
                 <StyledTextInput
                   variant="filled"
                   placeholder="e.g. Hall B, Room 204"
@@ -309,14 +273,9 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
 
               {/* Notes */}
               <Stack gap={6} marginBottom={16}>
-                <StyledText
-                  fontSize={12}
-                  fontWeight="700"
-                  color={Colors.textMuted}
-                  letterSpacing={0.5}
-                >
+                <Text variant="overline" color={Colors.textMuted}>
                   NOTES (OPTIONAL)
-                </StyledText>
+                </Text>
                 <StyledTextInput
                   variant="filled"
                   placeholder="Topics covered, materials allowed…"
@@ -341,16 +300,12 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                 marginBottom={reminderOn ? 12 : 0}
               >
                 <Stack gap={2}>
-                  <StyledText
-                    fontSize={15}
-                    fontWeight="700"
-                    color={Colors.textPrimary}
-                  >
+                  <Text variant="label" color={Colors.textPrimary}>
                     🔔 Exam reminder
-                  </StyledText>
-                  <StyledText fontSize={12} color={Colors.textMuted}>
+                  </Text>
+                  <Text variant="bodySmall" color={Colors.textMuted}>
                     Get notified before exam
-                  </StyledText>
+                  </Text>
                 </Stack>
                 <Switch
                   value={reminderOn}
@@ -362,14 +317,9 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
               {/* Reminder duration */}
               {reminderOn && (
                 <Stack gap={8} marginBottom={24}>
-                  <StyledText
-                    fontSize={12}
-                    fontWeight="700"
-                    color={Colors.textMuted}
-                    letterSpacing={0.5}
-                  >
+                  <Text variant="overline" color={Colors.textMuted}>
                     NOTIFY ME
-                  </StyledText>
+                  </Text>
                   <Stack flexDirection="row" flexWrap="wrap" gap={8}>
                     {EXAM_REMINDER_OPTIONS.filter((o) => o.value !== null).map(
                       (opt) => {
@@ -389,13 +339,13 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                             }
                             onPress={() => setReminder(opt.value as number)}
                           >
-                            <StyledText
+                            <Text
+                              variant="button"
                               fontSize={13}
-                              fontWeight="700"
                               color={active ? Colors.primary : Colors.textMuted}
                             >
                               {opt.label}
-                            </StyledText>
+                            </Text>
                           </StyledPressable>
                         );
                       },
@@ -413,9 +363,9 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                 backgroundColor={Colors.error + "14"}
                 onPress={handleDelete}
               >
-                <StyledText fontSize={15} fontWeight="700" color={Colors.error}>
+                <Text variant="button" color={Colors.error}>
                   🗑️ Delete Exam
-                </StyledText>
+                </Text>
               </StyledPressable>
             </StyledForm>
           </ScrollView>
@@ -463,29 +413,17 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                 borderBottomColor={Colors.border}
               >
                 <StyledPressable onPress={() => setShowDate(false)}>
-                  <StyledText
-                    fontSize={15}
-                    color={Colors.textMuted}
-                    fontWeight="600"
-                  >
+                  <Text variant="button" color={Colors.textMuted}>
                     Cancel
-                  </StyledText>
+                  </Text>
                 </StyledPressable>
-                <StyledText
-                  fontSize={16}
-                  fontWeight="800"
-                  color={Colors.textPrimary}
-                >
+                <Text variant="title" color={Colors.textPrimary}>
                   Exam date
-                </StyledText>
+                </Text>
                 <StyledPressable onPress={() => setShowDate(false)}>
-                  <StyledText
-                    fontSize={15}
-                    color={Colors.primary}
-                    fontWeight="700"
-                  >
+                  <Text variant="button" color={Colors.primary}>
                     Done
-                  </StyledText>
+                  </Text>
                 </StyledPressable>
               </Stack>
               <Stack paddingHorizontal={16} paddingBottom={32}>
@@ -546,21 +484,13 @@ function SubjectPickerModal({
             borderBottomColor={Colors.border}
           >
             <StyledPressable onPress={onClose}>
-              <StyledText
-                fontSize={15}
-                color={Colors.textMuted}
-                fontWeight="600"
-              >
+              <Text variant="button" color={Colors.textMuted}>
                 Cancel
-              </StyledText>
+              </Text>
             </StyledPressable>
-            <StyledText
-              fontSize={16}
-              fontWeight="800"
-              color={Colors.textPrimary}
-            >
+            <Text variant="title" color={Colors.textPrimary}>
               Select subject
-            </StyledText>
+            </Text>
             <Stack width={60} />
           </Stack>
           <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
@@ -581,18 +511,13 @@ function SubjectPickerModal({
                 borderRadius={6}
                 backgroundColor={Colors.textMuted}
               />
-              <StyledText
-                flex={1}
-                fontSize={15}
-                fontWeight="500"
-                color={Colors.textMuted}
-              >
+              <Text flex={1} variant="label" color={Colors.textMuted}>
                 No subject
-              </StyledText>
+              </Text>
               {!selected && (
-                <StyledText fontSize={16} color={Colors.primary}>
+                <Text variant="button" color={Colors.primary}>
                   ✓
-                </StyledText>
+                </Text>
               )}
             </StyledPressable>
             {subjects.map((s) => (
@@ -614,20 +539,19 @@ function SubjectPickerModal({
                   borderRadius={6}
                   backgroundColor={s.color}
                 />
-                <StyledText
+                <Text
                   flex={1}
-                  fontSize={15}
-                  fontWeight={selected === s.id ? "700" : "500"}
+                  variant={selected === s.id ? "label" : "body"}
                   color={
                     selected === s.id ? Colors.primary : Colors.textPrimary
                   }
                 >
                   {s.name}
-                </StyledText>
+                </Text>
                 {selected === s.id && (
-                  <StyledText fontSize={16} color={Colors.primary}>
+                  <Text variant="button" color={Colors.primary}>
                     ✓
-                  </StyledText>
+                  </Text>
                 )}
               </StyledPressable>
             ))}

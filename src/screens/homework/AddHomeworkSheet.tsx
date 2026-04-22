@@ -1,11 +1,12 @@
 import React, { useState, useCallback } from 'react'
 import { ScrollView, Modal } from 'react-native'
 import {
-  Stack, StyledText, StyledPressable, StyledTextInput,
+  Stack, StyledPressable, StyledTextInput,
   StyledDivider, StyledDatePicker,
 } from 'fluent-styles'
 import { toastService, loaderService } from 'fluent-styles'
 import { format } from 'date-fns'
+import { Text } from '../../components/text'
 import { useColors } from '../../constants'
 import { useHomework, useSubjects } from '../../hooks'
 import { useAppStore } from '../../stores'
@@ -97,11 +98,11 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
             paddingHorizontal={20} paddingVertical={14}
             borderBottomWidth={1} borderBottomColor={Colors.border}>
             <StyledPressable onPress={() => { reset(); onClose() }}>
-              <StyledText fontSize={15} color={Colors.textMuted} fontWeight="600">Cancel</StyledText>
+              <Text variant="button" color={Colors.textMuted}>Cancel</Text>
             </StyledPressable>
-            <StyledText fontSize={17} fontWeight="800" color={Colors.textPrimary}>Add Homework</StyledText>
+            <Text variant="title" color={Colors.textPrimary}>Add Homework</Text>
             <StyledPressable onPress={handleSave}>
-              <StyledText fontSize={15} color={Colors.primary} fontWeight="700">Save</StyledText>
+              <Text variant="button" color={Colors.primary}>Save</Text>
             </StyledPressable>
           </Stack>
 
@@ -110,9 +111,9 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
 
             {/* Title */}
             <Stack gap={6} marginBottom={16}>
-              <StyledText fontSize={12} fontWeight="700" color={Colors.textMuted} letterSpacing={0.5}>
+              <Text variant="overline" color={Colors.textMuted}>
                 TITLE *
-              </StyledText>
+              </Text>
               <StyledTextInput
                 variant="filled" placeholder="e.g. Chapter 5 exercises"
                 value={title} onChangeText={setTitle}
@@ -123,9 +124,9 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
 
             {/* Description */}
             <Stack gap={6} marginBottom={16}>
-              <StyledText fontSize={12} fontWeight="700" color={Colors.textMuted} letterSpacing={0.5}>
+              <Text variant="overline" color={Colors.textMuted}>
                 NOTES (OPTIONAL)
-              </StyledText>
+              </Text>
               <StyledTextInput
                 variant="filled" placeholder="Any details..."
                 value={desc} onChangeText={setDesc}
@@ -137,9 +138,9 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
 
             {/* Subject picker */}
             <Stack gap={6} marginBottom={16}>
-              <StyledText fontSize={12} fontWeight="700" color={Colors.textMuted} letterSpacing={0.5}>
+              <Text variant="overline" color={Colors.textMuted}>
                 SUBJECT
-              </StyledText>
+              </Text>
               <StyledPressable
                 flexDirection="row" alignItems="center" justifyContent="space-between"
                 paddingHorizontal={16} paddingVertical={14}
@@ -150,32 +151,32 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
                   <Stack flexDirection="row" alignItems="center" gap={10}>
                     <Stack width={12} height={12} borderRadius={6}
                       backgroundColor={selectedSubject.color} />
-                    <StyledText fontSize={15} fontWeight="600" color={Colors.textPrimary}>
+                    <Text variant="label" color={Colors.textPrimary}>
                       {selectedSubject.name}
-                    </StyledText>
+                    </Text>
                   </Stack>
                 ) : (
-                  <StyledText fontSize={15} color={Colors.textMuted}>Select subject (optional)</StyledText>
+                  <Text variant="body" color={Colors.textMuted}>Select subject (optional)</Text>
                 )}
-                <StyledText fontSize={14} color={Colors.textMuted}>›</StyledText>
+                <Text variant="body" color={Colors.textMuted}>›</Text>
               </StyledPressable>
             </Stack>
 
             {/* Due date */}
             <Stack gap={6} marginBottom={16}>
-              <StyledText fontSize={12} fontWeight="700" color={Colors.textMuted} letterSpacing={0.5}>
+              <Text variant="overline" color={Colors.textMuted}>
                 DUE DATE
-              </StyledText>
+              </Text>
               <StyledPressable
                 flexDirection="row" alignItems="center" justifyContent="space-between"
                 paddingHorizontal={16} paddingVertical={14}
                 borderRadius={12} backgroundColor={Colors.bgInput}
                 onPress={() => setShowDate(true)}
               >
-                <StyledText fontSize={15} fontWeight="600" color={Colors.textPrimary}>
+                <Text variant="label" color={Colors.textPrimary}>
                   📅  {format(dueDate, 'EEE, MMM d, yyyy')}
-                </StyledText>
-                <StyledText fontSize={14} color={Colors.textMuted}>›</StyledText>
+                </Text>
+                <Text variant="body" color={Colors.textMuted}>›</Text>
               </StyledPressable>
             </Stack>
 
@@ -203,11 +204,11 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
                 paddingHorizontal={20} paddingVertical={14}
                 borderBottomWidth={1} borderBottomColor={Colors.border}>
                 <StyledPressable onPress={() => setShowDate(false)}>
-                  <StyledText fontSize={15} color={Colors.textMuted} fontWeight="600">Cancel</StyledText>
-                </StyledPressable>
-                <StyledText fontSize={16} fontWeight="800" color={Colors.textPrimary}>Due date</StyledText>
-                <StyledPressable onPress={() => setShowDate(false)}>
-                  <StyledText fontSize={15} color={Colors.primary} fontWeight="700">Done</StyledText>
+                <Text variant="button" color={Colors.textMuted}>Cancel</Text>
+              </StyledPressable>
+              <Text variant="title" color={Colors.textPrimary}>Due date</Text>
+              <StyledPressable onPress={() => setShowDate(false)}>
+                <Text variant="button" color={Colors.primary}>Done</Text>
                 </StyledPressable>
               </Stack>
               <Stack paddingHorizontal={16} paddingBottom={32}>
@@ -242,9 +243,9 @@ function SubjectPickerModal({ subjects, selected, onSelect, onClose }: {
             paddingHorizontal={20} paddingVertical={14}
             borderBottomWidth={1} borderBottomColor={Colors.border}>
             <StyledPressable onPress={onClose}>
-              <StyledText fontSize={15} color={Colors.textMuted} fontWeight="600">Cancel</StyledText>
+              <Text variant="button" color={Colors.textMuted}>Cancel</Text>
             </StyledPressable>
-            <StyledText fontSize={16} fontWeight="800" color={Colors.textPrimary}>Select subject</StyledText>
+            <Text variant="title" color={Colors.textPrimary}>Select subject</Text>
             <Stack width={60} />
           </Stack>
           <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
@@ -256,10 +257,10 @@ function SubjectPickerModal({ subjects, selected, onSelect, onClose }: {
               onPress={() => onSelect(null)}
             >
               <Stack width={12} height={12} borderRadius={6} backgroundColor={Colors.textMuted} />
-              <StyledText flex={1} fontSize={15} fontWeight="500" color={Colors.textMuted}>
+              <Text flex={1} variant="label" color={Colors.textMuted}>
                 No subject
-              </StyledText>
-              {!selected && <StyledText fontSize={16} color={Colors.primary}>✓</StyledText>}
+              </Text>
+              {!selected && <Text variant="button" color={Colors.primary}>✓</Text>}
             </StyledPressable>
 
             {subjects.map(s => (
@@ -271,12 +272,11 @@ function SubjectPickerModal({ subjects, selected, onSelect, onClose }: {
                 onPress={() => onSelect(s.id)}
               >
                 <Stack width={12} height={12} borderRadius={6} backgroundColor={s.color} />
-                <StyledText flex={1} fontSize={15}
-                  fontWeight={selected === s.id ? '700' : '500'}
+                <Text flex={1} variant={selected === s.id ? 'label' : 'body'}
                   color={selected === s.id ? Colors.primary : Colors.textPrimary}>
                   {s.name}
-                </StyledText>
-                {selected === s.id && <StyledText fontSize={16} color={Colors.primary}>✓</StyledText>}
+                </Text>
+                {selected === s.id && <Text variant="button" color={Colors.primary}>✓</Text>}
               </StyledPressable>
             ))}
           </ScrollView>

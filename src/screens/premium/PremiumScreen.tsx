@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ScrollView } from 'react-native'
+import { ScrollView, ActivityIndicator } from 'react-native'
 import { router } from 'expo-router'
 import { Stack, StyledText, StyledPressable, StyledCard } from 'fluent-styles'
 import { Text } from '../../components'
@@ -56,6 +56,35 @@ export default function PremiumScreen() {
         </Text>
         <StyledPressable
           marginTop={8} paddingVertical={14} paddingHorizontal={32}
+          borderRadius={30} backgroundColor={Colors.primary}
+          onPress={() => router.back()}
+        >
+          <Text variant="button" color="#fff">Back to Kronos</Text>
+        </StyledPressable>
+      </Stack>
+    )
+  }
+
+  // ── Store unavailable (initialization failed) ────────────────────────────────
+  if (premium.purchaseManagerError) {
+    return (
+      <Stack flex={1} backgroundColor={Colors.bg}
+        alignItems="center" justifyContent="center" gap={16} padding={32}>
+        <Stack
+          width={52} height={52} borderRadius={26}
+          backgroundColor={Colors.error + '15'}
+          alignItems="center" justifyContent="center"
+        >
+          <Text variant="header">⚠️</Text>
+        </Stack>
+        <Text variant="display" color={Colors.textPrimary} textAlign="center">
+          Store Unavailable
+        </Text>
+        <Text variant="body" color={Colors.textMuted} textAlign="center">
+          The App Store is temporarily unavailable. Please try again shortly.
+        </Text>
+        <StyledPressable
+          marginTop={16} paddingVertical={14} paddingHorizontal={32}
           borderRadius={30} backgroundColor={Colors.primary}
           onPress={() => router.back()}
         >
@@ -227,27 +256,36 @@ export default function PremiumScreen() {
         <Stack paddingHorizontal={20} gap={12}>
           <StyledPressable
             paddingVertical={18} borderRadius={30}
-            backgroundColor={Colors.primary}
+            backgroundColor={premium.purchaseManagerLoading ? Colors.textMuted : Colors.primary}
             alignItems="center" justifyContent="center"
             onPress={handlePurchasePress}
+            disabled={premium.purchaseManagerLoading || !premium.purchaseManagerReady}
             style={{
               shadowColor:   Colors.primary,
               shadowOffset:  { width: 0, height: 6 },
               shadowOpacity: 0.35,
               shadowRadius:  12,
               elevation:     6,
+              opacity: premium.purchaseManagerLoading || !premium.purchaseManagerReady ? 0.6 : 1,
             }}
           >
-            <Text variant="button" color="#fff">
-              {selected === 'YEARLY'   ? '🎉 Start 7-Day Free Trial' :
-               selected === 'ONE_TIME' ? '⚡ Buy Lifetime Access'    :
-               '🚀 Start Monthly Plan'}
-            </Text>
+            {premium.purchaseManagerLoading ? (
+              <ActivityIndicator color="#fff" size="small" />
+            ) : (
+              <Text variant="button" color="#fff">
+                {selected === 'YEARLY'   ? '🎉 Start 7-Day Free Trial' :
+                 selected === 'ONE_TIME' ? '⚡ Buy Lifetime Access'    :
+                 '🚀 Start Monthly Plan'}
+              </Text>
+            )}
           </StyledPressable>
 
           <Stack alignItems="center" gap={6}>
-            <StyledPressable onPress={premium.restore}>
-              <Text variant="subLabel" color={Colors.primary}>
+            <StyledPressable 
+              onPress={premium.restore}
+              disabled={premium.purchaseManagerLoading || !premium.purchaseManagerReady}
+            >
+              <Text variant="subLabel" color={premium.purchaseManagerLoading || !premium.purchaseManagerReady ? Colors.textMuted : Colors.primary}>
                 Restore purchases
               </Text>
             </StyledPressable>

@@ -63,10 +63,25 @@ export class RevenueCatManager implements IPurchaseManager {
    * Must be called before any purchase operations.
    */
   async initialize(): Promise<void> {
-    if (isRevenueCatInitialized) return
+    if (isRevenueCatInitialized) {
+      if (__DEV__) {
+        console.log('[RevenueCatManager] Already initialized, skipping')
+      }
+      return
+    }
 
     try {
+      if (__DEV__) {
+        console.log('[RevenueCatManager] Starting initialization...')
+        console.log('[RevenueCatManager] Environment:', __DEV__ ? 'development (Test Store)' : 'production')
+        console.log('[RevenueCatManager] API Key:', REVENUECAT_API_KEY.substring(0, 10) + '...')
+      }
+      
       const SDK = await importPurchases()
+      
+      if (__DEV__) {
+        console.log('[RevenueCatManager] RevenueCat SDK imported successfully')
+      }
       
       // Initialize RevenueCat with API key
       // For development: Using Test Store configuration
@@ -76,10 +91,15 @@ export class RevenueCatManager implements IPurchaseManager {
         appUserID: undefined, // Let RevenueCat generate one
       })
       
+      if (__DEV__) {
+        console.log('[RevenueCatManager] SDK configured successfully')
+      }
+      
       isRevenueCatInitialized = true
-      console.log('[RevenueCatManager] Initialized successfully')
+      console.log('[RevenueCatManager] Initialization completed successfully')
     } catch (err) {
       console.error('[RevenueCatManager] Initialization failed:', err)
+      isRevenueCatInitialized = false
       throw err
     }
   }

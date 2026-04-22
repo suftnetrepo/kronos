@@ -2,7 +2,6 @@ import React, { useState, useCallback } from "react";
 import { ScrollView, Modal } from "react-native";
 import {
   Stack,
-  StyledText,
   StyledPressable,
   StyledTextInput,
   StyledDivider,
@@ -10,6 +9,7 @@ import {
   StyledForm,
 } from "fluent-styles";
 import { toastService, loaderService } from "fluent-styles";
+import { Text } from "../../components/text";
 import { useColors } from "../../constants";
 import { REMINDER_OPTIONS, SUBJECT_COLORS } from "../../constants";
 import { DAYS, DAY_LABELS } from "../../db/schema";
@@ -205,25 +205,17 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                 onClose();
               }}
             >
-              <StyledText
-                fontSize={15}
-                color={Colors.textMuted}
-                fontWeight="600"
-              >
+              <Text variant="button" color={Colors.textMuted}>
                 Cancel
-              </StyledText>
+              </Text>
             </StyledPressable>
-            <StyledText
-              fontSize={17}
-              fontWeight="800"
-              color={Colors.textPrimary}
-            >
+            <Text variant="title" color={Colors.textPrimary}>
               Add Subject
-            </StyledText>
+            </Text>
             <StyledPressable onPress={handleSave}>
-              <StyledText fontSize={15} color={Colors.primary} fontWeight="700">
+              <Text variant="button" color={Colors.primary}>
                 Save
-              </StyledText>
+              </Text>
             </StyledPressable>
           </Stack>
 
@@ -233,14 +225,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
           >
             {/* Subject name */}
             <Stack gap={6} marginBottom={16}>
-              <StyledText
-                fontSize={12}
-                fontWeight="700"
-                color={Colors.textMuted}
-                letterSpacing={0.5}
-              >
+              <Text variant="overline" color={Colors.textMuted}>
                 SUBJECT NAME *
-              </StyledText>
+              </Text>
               <StyledTextInput
                 variant="filled"
                 placeholder="e.g. Mathematics"
@@ -256,14 +243,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
               {/* Teacher + Room row */}
               <Stack flexDirection="row" gap={12} marginBottom={16}>
                 <Stack flex={1} gap={6}>
-                  <StyledText
-                    fontSize={12}
-                    fontWeight="700"
-                    color={Colors.textMuted}
-                    letterSpacing={0.5}
-                  >
+                  <Text variant="overline" color={Colors.textMuted}>
                     TEACHER
-                  </StyledText>
+                  </Text>
                   <StyledTextInput
                     variant="filled"
                     placeholder="Optional"
@@ -274,14 +256,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                   />
                 </Stack>
                 <Stack flex={1} gap={6}>
-                  <StyledText
-                    fontSize={12}
-                    fontWeight="700"
-                    color={Colors.textMuted}
-                    letterSpacing={0.5}
-                  >
+                  <Text variant="overline" color={Colors.textMuted}>
                     ROOM
-                  </StyledText>
+                  </Text>
                   <StyledTextInput
                     variant="filled"
                     placeholder="Optional"
@@ -295,14 +272,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
 
               {/* Days selector */}
               <Stack gap={8} marginBottom={16}>
-                <StyledText
-                  fontSize={12}
-                  fontWeight="700"
-                  color={Colors.textMuted}
-                  letterSpacing={0.5}
-                >
+                <Text variant="overline" color={Colors.textMuted}>
                   REPEAT ON *
-                </StyledText>
+                </Text>
                 <Stack flexDirection="row" gap={8} flexWrap="wrap">
                   {DAYS.map((day) => {
                     const active = selectedDays.includes(day);
@@ -317,13 +289,13 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                         backgroundColor={active ? color + "20" : Colors.bgCard}
                         onPress={() => toggleDay(day)}
                       >
-                        <StyledText
+                        <Text
+                          variant="button"
                           fontSize={13}
-                          fontWeight="700"
                           color={active ? color : Colors.textMuted}
                         >
                           {DAY_LABELS[day]}
-                        </StyledText>
+                        </Text>
                       </StyledPressable>
                     );
                   })}
@@ -332,14 +304,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
 
               {/* Time row */}
               <Stack gap={8} marginBottom={16}>
-                <StyledText
-                  fontSize={12}
-                  fontWeight="700"
-                  color={Colors.textMuted}
-                  letterSpacing={0.5}
-                >
+                <Text variant="overline" color={Colors.textMuted}>
                   TIME *
-                </StyledText>
+                </Text>
                 <Stack flexDirection="row" gap={12}>
                   {/* Start time */}
                   <StyledPressable
@@ -353,20 +320,12 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                     backgroundColor={Colors.bgInput}
                     onPress={() => setShowStart(true)}
                   >
-                    <StyledText
-                      fontSize={13}
-                      color={Colors.textMuted}
-                      fontWeight="600"
-                    >
+                    <Text variant="label" color={Colors.textMuted}>
                       From
-                    </StyledText>
-                    <StyledText
-                      fontSize={16}
-                      fontWeight="800"
-                      color={Colors.textPrimary}
-                    >
+                    </Text>
+                    <Text variant="title" color={Colors.textPrimary}>
                       {startTime}
-                    </StyledText>
+                    </Text>
                   </StyledPressable>
                   {/* End time */}
                   <StyledPressable
@@ -380,34 +339,21 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                     backgroundColor={Colors.bgInput}
                     onPress={() => setShowEnd(true)}
                   >
-                    <StyledText
-                      fontSize={13}
-                      color={Colors.textMuted}
-                      fontWeight="600"
-                    >
+                    <Text variant="label" color={Colors.textMuted}>
                       To
-                    </StyledText>
-                    <StyledText
-                      fontSize={16}
-                      fontWeight="800"
-                      color={Colors.textPrimary}
-                    >
+                    </Text>
+                    <Text variant="title" color={Colors.textPrimary}>
                       {endTime}
-                    </StyledText>
+                    </Text>
                   </StyledPressable>
                 </Stack>
               </Stack>
 
               {/* Colour picker */}
               <Stack gap={8} marginBottom={16}>
-                <StyledText
-                  fontSize={12}
-                  fontWeight="700"
-                  color={Colors.textMuted}
-                  letterSpacing={0.5}
-                >
+                <Text variant="overline" color={Colors.textMuted}>
                   COLOUR
-                </StyledText>
+                </Text>
                 <Stack flexDirection="row" flexWrap="wrap" gap={10}>
                   {SUBJECT_COLORS.map((c) => (
                     <StyledPressable
@@ -433,9 +379,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                       }
                     >
                       {color === c && (
-                        <StyledText fontSize={14} color="#fff">
+                        <Text variant="button" fontSize={16} color="#fff">
                           ✓
-                        </StyledText>
+                        </Text>
                       )}
                     </StyledPressable>
                   ))}
@@ -454,16 +400,12 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                 marginBottom={reminderOn ? 12 : 0}
               >
                 <Stack gap={2}>
-                  <StyledText
-                    fontSize={15}
-                    fontWeight="700"
-                    color={Colors.textPrimary}
-                  >
+                  <Text variant="label" color={Colors.textPrimary}>
                     🔔 Class reminder
-                  </StyledText>
-                  <StyledText fontSize={12} color={Colors.textMuted}>
+                  </Text>
+                  <Text variant="bodySmall" color={Colors.textMuted}>
                     Get notified before class starts
-                  </StyledText>
+                  </Text>
                 </Stack>
                 <Switch
                   value={reminderOn}
@@ -475,14 +417,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
               {/* Reminder duration */}
               {reminderOn && (
                 <Stack gap={8}>
-                  <StyledText
-                    fontSize={12}
-                    fontWeight="700"
-                    color={Colors.textMuted}
-                    letterSpacing={0.5}
-                  >
+                  <Text variant="overline" color={Colors.textMuted}>
                     NOTIFY ME
-                  </StyledText>
+                  </Text>
                   <Stack flexDirection="row" flexWrap="wrap" gap={8}>
                     {REMINDER_OPTIONS.filter((o) => o.value !== null).map(
                       (opt) => {
@@ -502,13 +439,13 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                             }
                             onPress={() => setReminder(opt.value as number)}
                           >
-                            <StyledText
+                            <Text
+                              variant="button"
                               fontSize={13}
-                              fontWeight="700"
                               color={active ? Colors.primary : Colors.textMuted}
                             >
                               {opt.label}
-                            </StyledText>
+                            </Text>
                           </StyledPressable>
                         );
                       },
@@ -584,21 +521,13 @@ function TimePicker({
             borderBottomColor={Colors.border}
           >
             <StyledPressable onPress={onClose}>
-              <StyledText
-                fontSize={15}
-                color={Colors.textMuted}
-                fontWeight="600"
-              >
+              <Text variant="button" color={Colors.textMuted}>
                 Cancel
-              </StyledText>
+              </Text>
             </StyledPressable>
-            <StyledText
-              fontSize={16}
-              fontWeight="800"
-              color={Colors.textPrimary}
-            >
+            <Text variant="title" color={Colors.textPrimary}>
               {title}
-            </StyledText>
+            </Text>
             <Stack width={60} />
           </Stack>
           <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
@@ -615,17 +544,17 @@ function TimePicker({
                 }
                 onPress={() => onSelect(t)}
               >
-                <StyledText
+                <Text
+                  variant="metric"
                   fontSize={17}
-                  fontWeight={t === value ? "800" : "500"}
                   color={t === value ? Colors.primary : Colors.textPrimary}
                 >
                   {t}
-                </StyledText>
+                </Text>
                 {t === value && (
-                  <StyledText fontSize={16} color={Colors.primary}>
+                  <Text variant="button" color={Colors.primary}>
                     ✓
-                  </StyledText>
+                  </Text>
                 )}
               </StyledPressable>
             ))}

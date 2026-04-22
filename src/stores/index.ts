@@ -67,6 +67,10 @@ export const usePremiumStore = create<PremiumState>((set) => ({
   setLoading:     (v)            => set({ loading: v }),
 }))
 
+// ─── Purchase Readiness store ──────────────────────────────────────────────────
+
+export { usePurchaseReadinessStore } from './purchase-readiness.store'
+
 // ─── Settings store (Phase 2) ─────────────────────────────────────────────────
 
 export { useSettingsStore } from './settings.store'
