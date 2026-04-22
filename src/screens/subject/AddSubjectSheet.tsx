@@ -56,6 +56,16 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
   const [showStart, setShowStart] = useState(false);
   const [showEnd, setShowEnd] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
+  const [touched, setTouched] = useState({ name: false });
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+
+  // Validation
+  const nameError = (touched.name || attemptedSubmit) && !name.trim() ? "Subject name is required" : null;
+  const daysError = (attemptedSubmit && selectedDays.length === 0) ? "Choose at least one day" : null;
+  const timeError =
+    attemptedSubmit && startTime >= endTime ? "End time must be after start time" : null;
+  const isValid =
+    !!name.trim() && selectedDays.length > 0 && startTime < endTime;
 
   const reset = () => {
     setName("");
@@ -67,6 +77,8 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
     setEndTime("10:00");
     setReminder(null);
     setReminderOn(false);
+    setTouched({ name: false });
+    setAttemptedSubmit(false);
   };
 
   const toggleDay = (day: Day) => {
@@ -93,6 +105,13 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
   };
 
   const handleSave = useCallback(async () => {
+    setAttemptedSubmit(true);
+
+    if (!isValid) {
+      toastService.error("Form invalid", "Please fill in all required fields");
+      return;
+    }
+
     if (!premium.canAddSubject(allSubjects.length)) {
       toastService.error(
         `Free limit reached`,
@@ -101,18 +120,6 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
       onClose();
       const { router } = require("expo-router");
       router.push("/premium");
-      return;
-    }
-    if (!name.trim()) {
-      toastService.error("Name required", "Enter a subject name");
-      return;
-    }
-    if (selectedDays.length === 0) {
-      toastService.error("Select days", "Choose at least one day");
-      return;
-    }
-    if (startTime >= endTime) {
-      toastService.error("Invalid time", "End time must be after start time");
       return;
     }
 
@@ -148,6 +155,7 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
   }, [
     premium,
     allSubjects,
+    isValid,
     name,
     teacher,
     room,
@@ -212,8 +220,8 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
             <Text variant="title" color={Colors.textPrimary}>
               Add Subject
             </Text>
-            <StyledPressable onPress={handleSave}>
-              <Text variant="button" color={Colors.primary}>
+            <StyledPressable onPress={handleSave} disabled={!isValid}>
+              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>
                 Save
               </Text>
             </StyledPressable>
@@ -232,11 +240,19 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                 variant="filled"
                 placeholder="e.g. Mathematics"
                 value={name}
-                onChangeText={setName}
+                onChangeText={(value) => {
+                  setName(value);
+                  if (!touched.name) setTouched((s) => ({ ...s, name: true }));
+                }}
                 fontSize={15}
                 borderRadius={12}
                 autoFocus
               />
+              {nameError ? (
+                <Text variant="caption" color={Colors.error}>
+                  {nameError}
+                </Text>
+              ) : null}
             </Stack>
 
             <StyledForm>
@@ -300,6 +316,11 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                     );
                   })}
                 </Stack>
+                {daysError ? (
+                  <Text variant="caption" color={Colors.error}>
+                    {daysError}
+                  </Text>
+                ) : null}
               </Stack>
 
               {/* Time row */}
@@ -347,6 +368,11 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                     </Text>
                   </StyledPressable>
                 </Stack>
+                {timeError ? (
+                  <Text variant="caption" color={Colors.error}>
+                    {timeError}
+                  </Text>
+                ) : null}
               </Stack>
 
               {/* Colour picker */}

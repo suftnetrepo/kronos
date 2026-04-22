@@ -31,15 +31,30 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
   const [dueDate,    setDueDate]    = useState<Date>(new Date())
   const [showDate,   setShowDate]   = useState(false)
   const [showSubjects, setShowSubjects] = useState(false)
+  const [touched, setTouched] = useState({ title: false })
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false)
 
   const selectedSubject = subjects.find(s => s.id === subjectId)
+
+  // Validation
+  const titleError = (touched.title || attemptedSubmit) && !title.trim() ? "Title is required" : null
+  const isValid = !!title.trim()
 
   const reset = () => {
     setTitle(''); setDesc(''); setSubjectId(null)
     setDueDate(new Date()); setShowDate(false)
+    setTouched({ title: false })
+    setAttemptedSubmit(false)
   }
 
   const handleSave = useCallback(async () => {
+    setAttemptedSubmit(true)
+    
+    if (!isValid) {
+      toastService.error('Form invalid', 'Please fill in all required fields')
+      return
+    }
+    
     // Count only this month's homework for the free limit check
     const now = new Date()
     const thisMonthCount = allHomework.filter(h => {
@@ -56,7 +71,6 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
       router.push('/premium')
       return
     }
-    if (!title.trim()) { toastService.error('Title required', 'Enter a homework title'); return }
 
     const id = loaderService.show({ label: 'Saving…', variant: 'spinner' })
     try {
@@ -76,7 +90,7 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
     } finally {
       loaderService.hide(id)
     }
-  }, [premium, allHomework, title, desc, subjectId, dueDate, create, invalidateData, onClose])
+  }, [premium, allHomework, title, isValid, create, invalidateData, onClose])
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -101,8 +115,8 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
               <Text variant="button" color={Colors.textMuted}>Cancel</Text>
             </StyledPressable>
             <Text variant="title" color={Colors.textPrimary}>Add Homework</Text>
-            <StyledPressable onPress={handleSave}>
-              <Text variant="button" color={Colors.primary}>Save</Text>
+            <StyledPressable onPress={handleSave} disabled={!isValid}>
+              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>Save</Text>
             </StyledPressable>
           </Stack>
 
@@ -116,10 +130,18 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
               </Text>
               <StyledTextInput
                 variant="filled" placeholder="e.g. Chapter 5 exercises"
-                value={title} onChangeText={setTitle}
+                value={title} onChangeText={(value) => {
+                  setTitle(value)
+                  if (!touched.title) setTouched((s) => ({ ...s, title: true }))
+                }}
                 fontSize={15} borderRadius={12} autoFocus
                  returnKeyType='next'
               />
+              {titleError ? (
+                <Text variant="caption" color={Colors.error}>
+                  {titleError}
+                </Text>
+              ) : null}
             </Stack>
 
             {/* Description */}

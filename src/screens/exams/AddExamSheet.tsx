@@ -40,8 +40,14 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
   const [reminderOn, setReminderOn] = useState(false);
   const [showDate, setShowDate] = useState(false);
   const [showSubjects, setShowSubjects] = useState(false);
+  const [touched, setTouched] = useState({ title: false });
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   const selectedSubject = subjects.find((s) => s.id === subjectId);
+
+  // Validation
+  const titleError = (touched.title || attemptedSubmit) && !title.trim() ? "Title is required" : null;
+  const isValid = !!title.trim();
 
   const reset = () => {
     setTitle("");
@@ -53,6 +59,8 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
     setReminderOn(false);
     setShowDate(false);
     setShowSubjects(false);
+    setTouched({ title: false });
+    setAttemptedSubmit(false);
   };
 
   const handleReminderToggle = async (on: boolean) => {
@@ -73,6 +81,13 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
   };
 
   const handleSave = useCallback(async () => {
+    setAttemptedSubmit(true);
+
+    if (!isValid) {
+      toastService.error("Form invalid", "Please fill in all required fields");
+      return;
+    }
+
     if (!premium.canAddExam(allExams.length)) {
       toastService.error(
         "Free limit reached",
@@ -81,10 +96,6 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
       onClose();
       const { router } = require("expo-router");
       router.push("/premium");
-      return;
-    }
-    if (!title.trim()) {
-      toastService.error("Title required", "Enter an exam title");
       return;
     }
     try {
@@ -109,6 +120,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
   }, [
     premium,
     allExams,
+    isValid,
     title,
     notes,
     room,
@@ -169,8 +181,8 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
             <Text variant="title" color={Colors.textPrimary}>
               Exam
             </Text>
-            <StyledPressable onPress={handleSave}>
-              <Text variant="button" color={Colors.primary}>
+            <StyledPressable onPress={handleSave} disabled={!isValid}>
+              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>
                 Save
               </Text>
             </StyledPressable>
@@ -189,11 +201,19 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
                 variant="filled"
                 placeholder="e.g. Midterm Exam"
                 value={title}
-                onChangeText={setTitle}
+                onChangeText={(value) => {
+                  setTitle(value);
+                  if (!touched.title) setTouched((s) => ({ ...s, title: true }));
+                }}
                 fontSize={15}
                 borderRadius={12}
                 autoFocus
               />
+              {titleError ? (
+                <Text variant="caption" color={Colors.error}>
+                  {titleError}
+                </Text>
+              ) : null}
             </Stack>
 
             <StyledForm>

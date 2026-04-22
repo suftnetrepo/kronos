@@ -64,6 +64,16 @@ export function EditSubjectSheet({
   const [reminderOn, setReminderOn] = useState(false);
   const [showStart, setShowStart] = useState(false);
   const [showEnd, setShowEnd] = useState(false);
+  const [touched, setTouched] = useState({ name: false });
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+
+  // Validation
+  const nameError = (touched.name || attemptedSubmit) && !name.trim() ? "Subject name is required" : null;
+  const daysError = (attemptedSubmit && selectedDays.length === 0) ? "Choose at least one day" : null;
+  const timeError =
+    attemptedSubmit && startTime >= endTime ? "End time must be after start time" : null;
+  const isValid =
+    !!name.trim() && selectedDays.length > 0 && startTime < endTime;
 
   // Load subject data when sheet opens
   useEffect(() => {
@@ -79,6 +89,8 @@ export function EditSubjectSheet({
       setEndTime(s.endTime);
       setReminder(s.reminder ?? null);
       setReminderOn(!!s.reminder);
+      setTouched({ name: false });
+      setAttemptedSubmit(false);
       setLoaded(true);
     });
   }, [visible, subjectId]);
@@ -107,16 +119,10 @@ export function EditSubjectSheet({
   };
 
   const handleSave = useCallback(async () => {
-    if (!name.trim()) {
-      toastService.error("Name required", "Enter a subject name");
-      return;
-    }
-    if (selectedDays.length === 0) {
-      toastService.error("Select days", "Choose at least one day");
-      return;
-    }
-    if (startTime >= endTime) {
-      toastService.error("Invalid time", "End time must be after start time");
+    setAttemptedSubmit(true);
+
+    if (!isValid) {
+      toastService.error("Form invalid", "Please fill in all required fields");
       return;
     }
 
@@ -160,6 +166,7 @@ export function EditSubjectSheet({
       loaderService.hide(id);
     }
   }, [
+    isValid,
     name,
     teacher,
     room,
@@ -253,8 +260,8 @@ export function EditSubjectSheet({
             <Text variant="title" color={Colors.textPrimary}>
               Edit Subject
             </Text>
-            <StyledPressable onPress={handleSave}>
-              <Text variant="button" color={Colors.primary}>
+            <StyledPressable onPress={handleSave} disabled={!isValid}>
+              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>
                 Save
               </Text>
             </StyledPressable>
@@ -274,10 +281,18 @@ export function EditSubjectSheet({
                   variant="filled"
                   placeholder="e.g. Mathematics"
                   value={name}
-                  onChangeText={setName}
+                  onChangeText={(value) => {
+                    setName(value);
+                    if (!touched.name) setTouched((s) => ({ ...s, name: true }));
+                  }}
                   fontSize={15}
                   borderRadius={12}
                 />
+                {nameError ? (
+                  <Text variant="caption" color={Colors.error}>
+                    {nameError}
+                  </Text>
+                ) : null}
               </Stack>
 
               {/* Teacher + Room */}
@@ -340,6 +355,11 @@ export function EditSubjectSheet({
                     );
                   })}
                 </Stack>
+                {daysError ? (
+                  <Text variant="caption" color={Colors.error}>
+                    {daysError}
+                  </Text>
+                ) : null}
               </Stack>
 
               {/* Time */}
@@ -385,6 +405,11 @@ export function EditSubjectSheet({
                     </Text>
                   </StyledPressable>
                 </Stack>
+                {timeError ? (
+                  <Text variant="caption" color={Colors.error}>
+                    {timeError}
+                  </Text>
+                ) : null}
               </Stack>
 
               {/* Colour */}
@@ -491,8 +516,8 @@ export function EditSubjectSheet({
                 </Stack>
               )}
 
-              {/* Delete */}
-              <StyledDivider
+              {/* Delete — moved to swipe action on card */}
+              {/* <StyledDivider
                 borderBottomColor={Colors.border}
                 marginVertical={16}
               />
@@ -506,7 +531,7 @@ export function EditSubjectSheet({
                 <Text variant="button" color={Colors.error}>
                   🗑️ Delete Subject
                 </Text>
-              </StyledPressable>
+              </StyledPressable> */}
             </StyledForm>
           </ScrollView>
         </Stack>

@@ -11,7 +11,6 @@ import {
   StyledEmptyState,
   StyledSkeleton,
   StyledSpacer,
-  theme,
   StyledPage,
 } from "fluent-styles";
 import {
@@ -19,7 +18,7 @@ import {
   toastService,
   actionSheetService,
 } from "fluent-styles";
-import { Text } from "../../components";
+import { Text, SwipeDeleteAction } from "../../components";
 import { useColors } from "../../constants";
 import { DAYS, DAY_LABELS } from "../../db/schema";
 import { useSubjects } from "../../hooks";
@@ -34,134 +33,159 @@ import { ImportTimetableContent } from "../timetable/ImportTimetableContent";
 function SubjectCard({
   subject,
   onEdit,
+  onDelete,
+  openSwipeId,
+  onSwipeOpen,
 }: {
   subject: Subject;
   onEdit: (s: Subject) => void;
   onDelete: (s: Subject) => void;
+  openSwipeId: string | null;
+  onSwipeOpen: (id: string | null) => void;
 }) {
   const Colors = useColors();
+  const isOpen = openSwipeId === subject.id;
+
+  const handleSwipeOpenChange = (isOpen: boolean) => {
+    if (isOpen && openSwipeId !== subject.id) {
+      // Close the previous swipe before opening this one
+      onSwipeOpen(null);
+      setTimeout(() => onSwipeOpen(subject.id), 0);
+    } else if (!isOpen) {
+      onSwipeOpen(null);
+    }
+  };
+
   return (
-    <StyledPressable onPress={() => onEdit(subject)}>
-      <Stack flexDirection="row" gap={0} marginBottom={8}>
-        {/* Time column */}
+    <Stack flexDirection="row" gap={0} marginBottom={8}>
+      {/* Time column */}
+      <Stack
+        alignItems="flex-end"
+        paddingRight={12}
+        paddingTop={4}
+        gap={2}
+      >
+        <Text variant="label" color={Colors.textPrimary}>
+          {subject.startTime}
+        </Text>
+        <Text variant="caption" color={Colors.textMuted}>
+          {subject.endTime}
+        </Text>
+      </Stack>
+
+      {/* Timeline dot + line */}
+      <Stack alignItems="center" width={20}>
         <Stack
-          alignItems="flex-end"
-          paddingRight={12}
-          paddingTop={4}
-          gap={2}
+          width={12}
+          height={12}
+          borderRadius={6}
+          backgroundColor={subject.color}
+          marginTop={4}
+          style={{
+            shadowColor: subject.color,
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.4,
+            shadowRadius: 4,
+          }}
+        />
+        <Stack
+          flex={1}
+          width={2}
+          backgroundColor={Colors.border}
+          marginTop={4}
+        />
+      </Stack>
+
+      {/* Subject card with swipe delete */}
+      <Stack flex={1} paddingLeft={12} paddingBottom={8}>
+        <SwipeDeleteAction
+          itemId={subject.id}
+          isOpen={isOpen}
+          onOpenChange={handleSwipeOpenChange}
+          onDelete={() => onDelete(subject)}
+          destructiveColor={Colors.error}
         >
-          <Text variant="label" color={Colors.textPrimary}>
-            {subject.startTime}
-          </Text>
-          <Text variant="caption" color={Colors.textMuted}>
-            {subject.endTime}
-          </Text>
-        </Stack>
-
-        {/* Timeline dot + line */}
-        <Stack alignItems="center" width={20}>
-          <Stack
-            width={12}
-            height={12}
-            borderRadius={6}
-            backgroundColor={subject.color}
-            marginTop={4}
-            style={{
-              shadowColor: subject.color,
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.4,
-              shadowRadius: 4,
-            }}
-          />
-          <Stack
-            flex={1}
-            width={2}
-            backgroundColor={Colors.border}
-            marginTop={4}
-          />
-        </Stack>
-
-        {/* Subject card */}
-        <Stack flex={1} paddingLeft={12} paddingBottom={8}>
-          <StyledCard
-            borderRadius={16}
-            backgroundColor={Colors.bgCard}
-            borderWidth={0}
-            overflow="hidden"
-            style={{
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.06,
-              shadowRadius: 8,
-            }}
-          >
-            {/* Coloured left accent bar */}
-            <Stack flexDirection="row">
-              <Stack
-                width={4}
-                backgroundColor={subject.color}
-                borderTopLeftRadius={16}
-                borderBottomLeftRadius={16}
-              />
-              <Stack flex={1} padding={14} gap={6}>
+          <StyledPressable onPress={() => onEdit(subject)}>
+            <StyledCard
+              borderRadius={8}
+              backgroundColor={Colors.bgCard}
+              borderWidth={0}
+              overflow="hidden"
+              style={{
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.06,
+                shadowRadius: 8,
+              }}
+            >
+              {/* Coloured left accent bar */}
+              <Stack flexDirection="row">
                 <Stack
-                  flexDirection="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                >
-                  <Text
-                    variant="subtitle"
-                    color={Colors.textPrimary}
-                    flex={1}
-                    numberOfLines={1}
+                  width={4}
+                  backgroundColor={subject.color}
+                  borderTopLeftRadius={16}
+                  borderBottomLeftRadius={16}
+                />
+                <Stack flex={1} padding={14} gap={6}>
+                  <Stack
+                    flexDirection="row"
+                    alignItems="center"
+                    justifyContent="space-between"
                   >
-                    {subject.name}
-                  </Text>
-                  {subject.reminder && (
-                    <Stack
-                      flexDirection="row"
-                      alignItems="center"
-                      gap={4}
-                      paddingHorizontal={10}
-                      paddingVertical={4}
-                      borderRadius={999}
-                      backgroundColor={subject.color + "22"}
+                    <Text
+                      variant="subtitle"
+                      color={Colors.textPrimary}
+                      flex={1}
+                      numberOfLines={1}
                     >
-                      <StyledText fontSize={12}>🔔</StyledText>
-                      <Text
-                        variant="caption"
-                        color={subject.color}
+                      {subject.name}
+                    </Text>
+                    {subject.reminder && (
+                      <Stack
+                        flexDirection="row"
+                        alignItems="center"
+                        gap={4}
+                        paddingHorizontal={10}
+                        paddingVertical={4}
+                        borderRadius={999}
+                        backgroundColor={subject.color + "22"}
                       >
-                        {subject.reminder}m
-                      </Text>
-                    </Stack>
-                  )}
-                </Stack>
+                        <StyledText fontSize={12}>🔔</StyledText>
+                        <Text
+                          variant="caption"
+                          color={subject.color}
+                        >
+                          {subject.reminder}m
+                        </Text>
+                      </Stack>
+                    )}
+                  </Stack>
 
-                <Stack flexDirection="row" gap={16}>
-                  {subject.teacher ? (
-                    <Stack flexDirection="row" alignItems="center" gap={4}>
-                      <StyledText fontSize={12}>👤</StyledText>
-                      <Text variant="bodySmall" color={Colors.textSecondary}>
-                        {subject.teacher}
-                      </Text>
-                    </Stack>
-                  ) : null}
-                  {subject.room ? (
-                    <Stack flexDirection="row" alignItems="center" gap={4}>
-                      <StyledText fontSize={12}>📍</StyledText>
-                      <Text variant="bodySmall" color={Colors.textSecondary}>
-                        {subject.room}
-                      </Text>
-                    </Stack>
-                  ) : null}
+                  <Stack flexDirection="row" gap={16}>
+                    {subject.teacher ? (
+                      <Stack flexDirection="row" alignItems="center" gap={4}>
+                        <StyledText fontSize={12}>👤</StyledText>
+                        <Text variant="bodySmall" color={Colors.textSecondary}>
+                          {subject.teacher}
+                        </Text>
+                      </Stack>
+                    ) : null}
+                    {subject.room ? (
+                      <Stack flexDirection="row" alignItems="center" gap={4}>
+                        <StyledText fontSize={12}>📍</StyledText>
+                        <Text variant="bodySmall" color={Colors.textSecondary}>
+                          {subject.room}
+                        </Text>
+                      </Stack>
+                    ) : null}
+                  </Stack>
                 </Stack>
               </Stack>
-            </Stack>
-          </StyledCard>
-        </Stack>
+            </StyledCard>
+          </StyledPressable>
+        </SwipeDeleteAction>
       </Stack>
-    </StyledPressable>
+    </Stack>
   );
 }
 
@@ -268,6 +292,7 @@ export default function HomeScreen() {
 
   const [editId, setEditId] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -295,15 +320,16 @@ export default function HomeScreen() {
   const handleDelete = useCallback(
     async (subject: Subject) => {
       const ok = await dialogueService.confirm({
-        title: `Remove "${subject.name}"?`,
+        title: "Delete subject?",
         message: "This will also delete all homework for this subject.",
         icon: "🗑️",
-        confirmLabel: "Remove",
+        confirmLabel: "Delete",
         destructive: true,
       });
       if (!ok) return;
+      setOpenSwipeId(null);
       await remove(subject.id);
-      toastService.success("Subject removed");
+      toastService.success("Subject deleted");
     },
     [remove],
   );
@@ -471,6 +497,8 @@ export default function HomeScreen() {
               subject={subject}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              openSwipeId={openSwipeId}
+              onSwipeOpen={setOpenSwipeId}
             />
           ))}
         </ScrollView>

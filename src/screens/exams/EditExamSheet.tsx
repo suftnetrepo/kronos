@@ -39,6 +39,8 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
   const [reminderOn, setReminderOn] = useState(false);
   const [showDate, setShowDate] = useState(false);
   const [showSubjects, setShowSubjects] = useState(false);
+  const [touched, setTouched] = useState({ title: false });
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   useEffect(() => {
     if (exam) {
@@ -50,10 +52,16 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
       const hasReminder = exam.reminder !== null && exam.reminder !== undefined;
       setReminder(hasReminder ? exam.reminder : null);
       setReminderOn(hasReminder);
+      setTouched({ title: false });
+      setAttemptedSubmit(false);
     }
   }, [exam]);
 
   const selectedSubject = subjects.find((s) => s.id === subjectId);
+
+  // Validation
+  const titleError = (touched.title || attemptedSubmit) && !title.trim() ? "Title is required" : null;
+  const isValid = !!title.trim();
 
   const handleReminderToggle = async (on: boolean) => {
     if (on) {
@@ -74,10 +82,14 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
 
   const handleSave = useCallback(async () => {
     if (!exam) return;
-    if (!title.trim()) {
-      toastService.error("Title required", "Enter an exam title");
+
+    setAttemptedSubmit(true);
+
+    if (!isValid) {
+      toastService.error("Form invalid", "Please fill in all required fields");
       return;
     }
+
     try {
       await loaderService.wrap(
         () =>
@@ -96,7 +108,7 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
     } catch (err: any) {
       toastService.error("Failed to save", err?.message);
     }
-  }, [exam, title, notes, room, subjectId, examDate, update, onClose]);
+  }, [exam, isValid, title, notes, room, subjectId, examDate, reminderOn, reminder, update, onClose]);
 
   const handleDelete = useCallback(async () => {
     if (!exam) return;
@@ -168,8 +180,8 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
             <Text variant="title" color={Colors.textPrimary}>
               Edit Exam
             </Text>
-            <StyledPressable onPress={handleSave}>
-              <Text variant="button" color={Colors.primary}>
+            <StyledPressable onPress={handleSave} disabled={!isValid}>
+              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>
                 Save
               </Text>
             </StyledPressable>
@@ -188,10 +200,18 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                 variant="filled"
                 placeholder="e.g. Midterm Exam"
                 value={title}
-                onChangeText={setTitle}
+                onChangeText={(value) => {
+                  setTitle(value);
+                  if (!touched.title) setTouched((s) => ({ ...s, title: true }));
+                }}
                 fontSize={15}
                 borderRadius={12}
               />
+              {titleError ? (
+                <Text variant="caption" color={Colors.error}>
+                  {titleError}
+                </Text>
+              ) : null}
             </Stack>
             <StyledForm>
               {/* Subject picker */}
@@ -354,8 +374,8 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                 </Stack>
               )}
 
-              {/* Delete */}
-              <StyledPressable
+              {/* Delete — moved to swipe action on card */}
+              {/* <StyledPressable
                 alignItems="center"
                 justifyContent="center"
                 paddingVertical={14}
@@ -366,7 +386,7 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
                 <Text variant="button" color={Colors.error}>
                   🗑️ Delete Exam
                 </Text>
-              </StyledPressable>
+              </StyledPressable> */}
             </StyledForm>
           </ScrollView>
         </Stack>

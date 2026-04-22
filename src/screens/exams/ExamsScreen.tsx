@@ -18,7 +18,7 @@ import { format, differenceInDays, isToday, isTomorrow } from "date-fns";
 import { useColors } from "../../constants";
 import { useExams } from "../../hooks/useExams";
 import { useSubjects } from "../../hooks";
-import { Text } from "../../components";
+import { Text, SwipeDeleteAction } from "../../components";
 import type { Exam } from "../../db/schema";
 import { AddExamSheet } from "./AddExamSheet";
 import { EditExamSheet } from "./EditExamSheet";
@@ -52,6 +52,8 @@ function ExamRow({
   isPast,
   onPress,
   onDelete,
+  openSwipeId,
+  onSwipeOpen,
 }: {
   exam: Exam;
   subjectName: string;
@@ -59,86 +61,108 @@ function ExamRow({
   isPast: boolean;
   onPress: (e: Exam) => void;
   onDelete: (e: Exam) => void;
+  openSwipeId: string | null;
+  onSwipeOpen: (id: string | null) => void;
 }) {
   const Colors = useColors();
   const date = new Date(exam.date);
   const cd = isPast ? null : countdownLabel(date, Colors);
+  const isOpen = openSwipeId === exam.id;
+
+  const handleSwipeOpenChange = (isOpen: boolean) => {
+    if (isOpen && openSwipeId !== exam.id) {
+      // Close the previous swipe before opening this one
+      onSwipeOpen(null);
+      setTimeout(() => onSwipeOpen(exam.id), 0);
+    } else if (!isOpen) {
+      onSwipeOpen(null);
+    }
+  };
 
   return (
-    <StyledPressable
-      onPress={() => onPress(exam)}
-      onLongPress={() => onDelete(exam)}
-      opacity={isPast ? 0.5 : 1}
+    <SwipeDeleteAction
+      itemId={exam.id}
+      isOpen={isOpen}
+      onOpenChange={handleSwipeOpenChange}
+      onDelete={() => onDelete(exam)}
+      destructiveColor={Colors.error}
     >
-      <Stack
-        horizontal
-        alignItems="center"
-        gap={14}
-        paddingHorizontal={16}
-        paddingVertical={14}
-        backgroundColor={Colors.bgCard}
+      <StyledPressable
+        onPress={() => onPress(exam)}
+        opacity={isPast ? 0.5 : 1}
       >
-        {/* Icon circle */}
         <Stack
-          width={44}
-          height={44}
-          borderRadius={22}
-          backgroundColor={subjectColor + "20"}
+          horizontal
           alignItems="center"
-          justifyContent="center"
+          gap={14}
+          paddingHorizontal={16}
+          paddingVertical={14}
+          backgroundColor={Colors.bgCard}
+          borderRadius={12}
+          overflow="hidden"
         >
-          <StyledText fontSize={20}>📝</StyledText>
-        </Stack>
-
-        {/* Content */}
-        <Stack flex={1} gap={4}>
-          <Text
-            variant="label"
-            color={Colors.textPrimary}
-            numberOfLines={1}
+          {/* Icon circle */}
+          <Stack
+            width={44}
+            height={44}
+            borderRadius={22}
+            backgroundColor={subjectColor + "20"}
+            alignItems="center"
+            justifyContent="center"
           >
-            {exam.title}
-          </Text>
-          <Stack horizontal alignItems="center" gap={8} flexWrap="wrap">
-            {/* Subject badge */}
-            <Stack
-              paddingHorizontal={8}
-              paddingVertical={2}
-              borderRadius={6}
-              backgroundColor={subjectColor + "20"}
+            <StyledText fontSize={20}>📝</StyledText>
+          </Stack>
+
+          {/* Content */}
+          <Stack flex={1} gap={4}>
+            <Text
+              variant="label"
+              color={Colors.textPrimary}
+              numberOfLines={1}
             >
-              <Text variant="caption" fontWeight="700" color={subjectColor}>
-                {subjectName}
+              {exam.title}
+            </Text>
+            <Stack horizontal alignItems="center" gap={8} flexWrap="wrap">
+              {/* Subject badge */}
+              <Stack
+                paddingHorizontal={8}
+                paddingVertical={2}
+                borderRadius={6}
+                backgroundColor={subjectColor + "20"}
+              >
+                <Text variant="caption" fontWeight="700" color={subjectColor}>
+                  {subjectName}
+                </Text>
+              </Stack>
+              {/* Date */}
+              <Text variant="caption" fontWeight="600" color={Colors.textMuted}>
+                {format(date, "EEE, MMM d")}
+              </Text>
+              {/* Room */}
+              {exam.room ? (
+                <Text variant="caption" color={Colors.textMuted}>
+                  📍 {exam.room}
+                </Text>
+              ) : null}
+            </Stack>
+          </Stack>
+
+          {/* Countdown pill — upcoming only */}
+          {cd && (
+            <Stack
+              paddingHorizontal={10}
+              paddingVertical={5}
+              borderRadius={20}
+              backgroundColor={cd.bg}
+            >
+              <Text variant="button" color={cd.color}>
+                {cd.text}
               </Text>
             </Stack>
-            {/* Date */}
-            <Text variant="caption" fontWeight="600" color={Colors.textMuted}>
-              {format(date, "EEE, MMM d")}
-            </Text>
-            {/* Room */}
-            {exam.room ? (
-              <Text variant="caption" color={Colors.textMuted}>
-                📍 {exam.room}
-              </Text>
-            ) : null}
-          </Stack>
+          )}
         </Stack>
-
-        {/* Countdown pill — upcoming only */}
-        {cd && (
-          <Stack
-            paddingHorizontal={10}
-            paddingVertical={5}
-            borderRadius={20}
-            backgroundColor={cd.bg}
-          >
-            <Text variant="button" color={cd.color}>
-              {cd.text}
-            </Text>
-          </Stack>
-        )}
-      </Stack>
-    </StyledPressable>
+      </StyledPressable>
+    </SwipeDeleteAction>
   );
 }
 
@@ -190,6 +214,7 @@ export default function ExamsScreen() {
   const [showAdd, setShowAdd] = useState(false);
   const [editExam, setEditExam] = useState<Exam | null>(null);
   const [showPast, setShowPast] = useState(false);
+  const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -209,12 +234,13 @@ export default function ExamsScreen() {
     async (exam: Exam) => {
       const ok = await dialogueService.confirm({
         title: "Delete exam?",
-        message: `"${exam.title}" will be removed.`,
+        message: "This action cannot be undone.",
         icon: "🗑️",
         confirmLabel: "Delete",
         destructive: true,
       });
       if (ok) {
+        setOpenSwipeId(null);
         await remove(exam.id);
         toastService.success("Deleted");
       }
@@ -299,6 +325,8 @@ export default function ExamsScreen() {
                           isPast={false}
                           onPress={setEditExam}
                           onDelete={handleDelete}
+                          openSwipeId={openSwipeId}
+                          onSwipeOpen={setOpenSwipeId}
                         />
                         {i < upcoming.length - 1 && (
                           <StyledDivider
@@ -354,6 +382,8 @@ export default function ExamsScreen() {
                           isPast
                           onPress={setEditExam}
                           onDelete={handleDelete}
+                          openSwipeId={openSwipeId}
+                          onSwipeOpen={setOpenSwipeId}
                         />
                         {i < past.length - 1 && (
                           <StyledDivider
