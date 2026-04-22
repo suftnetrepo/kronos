@@ -14,6 +14,24 @@ import { DAYS, DAY_LABELS } from '../db/schema'
 
 // ─── Limits & Constants ────────────────────────────────────────────────────────
 
+// All subject colors that can be exported (must match SUBJECT_COLORS in constants/themes.ts)
+const SUPPORTED_SUBJECT_COLORS = [
+  '#6366F1', // indigo
+  '#8B5CF6', // violet
+  '#EC4899', // pink
+  '#EF4444', // red
+  '#F97316', // orange
+  '#EAB308', // yellow
+  '#22C55E', // green
+  '#14B8A6', // teal
+  '#3B82F6', // blue
+  '#06B6D4', // cyan
+  '#84CC16', // lime
+  '#F59E0B', // amber
+  '#6B7280', // gray
+  '#1F2937', // dark
+] as const
+
 export const IMPORT_LIMITS = {
   MAX_PAYLOAD_SIZE:    500_000,      // 500 KB max (base64 encoded)
   MAX_SUBJECTS:        50,           // Max subjects per import
@@ -22,10 +40,7 @@ export const IMPORT_LIMITS = {
   MAX_ROOM_LENGTH:     50,
   MAX_NOTES_LENGTH:    500,
   MAX_ICON_LENGTH:     20,
-  VALID_COLORS:        [
-    '#6366F1', '#EC4899', '#EF4444', '#F59E0B', '#10B981',
-    '#06B6D4', '#8B5CF6', '#6366F1', '#3B82F6', '#1E40AF',
-  ] as const,
+  VALID_COLORS:        SUPPORTED_SUBJECT_COLORS,
   VALID_ICONS:         [
     'book', 'calculator', 'language', 'science', 'sport',
     'art', 'music', 'code', 'compass', 'microscope',
@@ -64,6 +79,7 @@ export interface ImportPreview {
   duplicates:         string[]  // Subject names that already exist
   conflicts:          string[]  // Conflicting timetable slots
   errors:             ImportValidationError[]
+  warnings:           ImportValidationWarning[]  // Non-blocking warnings (e.g., color fallback)
   summary:            {
     total:            number
     new:              number
@@ -78,6 +94,14 @@ export interface ImportValidationError {
   field:              string        // Field name that failed
   value:              any           // The problematic value
   reason:             string        // Human-readable reason
+}
+
+export interface ImportValidationWarning {
+  index:              number        // Subject index in payload
+  field:              string        // Field name that triggered warning
+  value:              any           // The problematic value
+  reason:             string        // Human-readable reason
+  suggestedValue?:    any           // The suggested replacement value
 }
 
 export interface ImportResult {
@@ -164,6 +188,54 @@ export function decodeTimetable(code: string): TimetablePayload {
 
 // ─── Field validation helpers ─────────────────────────────────────────────────
 
+/**
+ * Find the closest color in the supported palette using RGB distance.
+ * This ensures any color can be imported by falling back to the nearest safe color.
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16),
+  } : null
+}
+
+function colorDistance(hex1: string, hex2: string): number {
+  const c1 = hexToRgb(hex1)
+  const c2 = hexToRgb(hex2)
+  if (!c1 || !c2) return Infinity
+  const dr = c1.r - c2.r
+  const dg = c1.g - c2.g
+  const db = c1.b - c2.b
+  return Math.sqrt(dr * dr + dg * dg + db * db)
+}
+
+/**
+ * Map any color to the closest supported color in the palette.
+ * Returns the mapped color and whether the color was already valid.
+ */
+export function mapColorToSupported(color: string): { mapped: string; wasValid: boolean } {
+  // If already valid, return as-is
+  if ((IMPORT_LIMITS.VALID_COLORS as readonly string[]).includes(color)) {
+    return { mapped: color, wasValid: true }
+  }
+
+  // Find the closest color by RGB distance
+  let closest = SUPPORTED_SUBJECT_COLORS[0]
+  let minDistance = colorDistance(color, closest)
+
+  for (const supportedColor of SUPPORTED_SUBJECT_COLORS) {
+    const distance = colorDistance(color, supportedColor)
+    if (distance < minDistance) {
+      minDistance = distance
+      closest = supportedColor
+    }
+  }
+
+  return { mapped: closest, wasValid: false }
+}
+
 function validateTimeFormat(time: string): { valid: boolean; reason?: string } {
   if (typeof time !== 'string') return { valid: false, reason: 'Time must be a string' }
   const match = time.match(/^(\d{1,2}):(\d{2})$/)
@@ -190,10 +262,23 @@ function validateDays(days: string): { valid: boolean; reason?: string } {
 
 function validateColor(color: string): { valid: boolean; reason?: string } {
   if (typeof color !== 'string') return { valid: false, reason: 'Color must be a string' }
-  if (!IMPORT_LIMITS.VALID_COLORS.includes(color as any)) {
-    return { valid: false, reason: `Color not allowed: ${color}` }
-  }
+  // Color is always valid — we can map unsupported colors to the nearest safe color
   return { valid: true }
+}
+
+function getColorWarning(color: string): ImportValidationWarning | null {
+  if (typeof color !== 'string') return null
+  const { wasValid, mapped } = mapColorToSupported(color)
+  if (!wasValid) {
+    return {
+      index: -1,  // Will be set by caller
+      field: 'color',
+      value: color,
+      reason: `Color ${color} not in palette, using closest match ${mapped}`,
+      suggestedValue: mapped,
+    }
+  }
+  return null
 }
 
 function validateIcon(icon: string): { valid: boolean; reason?: string } {
@@ -227,8 +312,9 @@ function validateString(
 export function validateSubject(
   subject: ShareableSubject,
   index: number
-): ImportValidationError[] {
+): { errors: ImportValidationError[]; warnings: ImportValidationWarning[] } {
   const errors: ImportValidationError[] = []
+  const warnings: ImportValidationWarning[] = []
 
   // Required fields
   if (!subject.n) {
@@ -326,14 +412,13 @@ export function validateSubject(
   }
 
   // Color and icon validation
+  // Color is always allowed — we can map it to a safe color if needed
   const colorCheck = validateColor(subject.c || '')
-  if (!colorCheck.valid) {
-    errors.push({
-      index,
-      field: 'color',
-      value: subject.c,
-      reason: colorCheck.reason!,
-    })
+  if (colorCheck.valid && subject.c) {
+    const colorWarning = getColorWarning(subject.c)
+    if (colorWarning) {
+      warnings.push({ ...colorWarning, index })
+    }
   }
 
   const iconCheck = validateIcon(subject.ic || '')
@@ -377,7 +462,7 @@ export function validateSubject(
     }
   }
 
-  return errors
+  return { errors, warnings }
 }
 
 // ─── Detect duplicates and conflicts in existing data ──────────────────────────
@@ -443,6 +528,7 @@ export function generateImportPreview(
   existingSubjects: Subject[]
 ): ImportPreview {
   const errors: ImportValidationError[] = []
+  const warnings: ImportValidationWarning[] = []
   const subjectsData: ImportPreview['subjects'] = []
   const duplicates = new Set<string>()
   const conflicts = new Set<string>()
@@ -467,9 +553,11 @@ export function generateImportPreview(
 
   for (let i = 0; i < payload.ss.length; i++) {
     const subject = payload.ss[i]
-    const fieldErrors = validateSubject(subject, i)
+    const { errors: fieldErrors, warnings: fieldWarnings } = validateSubject(subject, i)
     errors.push(...fieldErrors)
+    warnings.push(...fieldWarnings)
 
+    // Subject is valid if there are NO blocking errors (warnings don't block)
     if (fieldErrors.length === 0) {
       validCount++
 
@@ -496,6 +584,7 @@ export function generateImportPreview(
     duplicates: Array.from(duplicates),
     conflicts: Array.from(conflicts),
     errors,
+    warnings,
     summary: {
       total: payload.ss.length,
       new: subjectsData.filter(s => s.status === 'new').length,
@@ -511,18 +600,21 @@ export function generateImportPreview(
 export function payloadToSubjects(
   payload: TimetablePayload
 ): Omit<Subject, 'id' | 'createdAt' | 'updatedAt' | 'sortOrder' | 'reminderIds'>[] {
-  return payload.ss.map(s => ({
-    name:      s.n,
-    teacher:   s.t,
-    room:      s.r,
-    color:     s.c,
-    icon:      s.ic,
-    days:      s.d,
-    startTime: s.s,
-    endTime:   s.e,
-    reminder:  s.rm,
-    notes:     null,
-  }))
+  return payload.ss.map(s => {
+    const { mapped: mappedColor } = mapColorToSupported(s.c)
+    return {
+      name:      s.n,
+      teacher:   s.t,
+      room:      s.r,
+      color:     mappedColor,  // Use mapped color to ensure it's valid
+      icon:      s.ic,
+      days:      s.d,
+      startTime: s.s,
+      endTime:   s.e,
+      reminder:  s.rm,
+      notes:     null,
+    }
+  })
 }
 
 // ─── Import history tracking (for undo) ────────────────────────────────────────

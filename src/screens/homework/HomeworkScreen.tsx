@@ -11,7 +11,7 @@ import {
   StyledSkeleton,
   Switch,
   StyledPage,
-  theme,
+  theme,useActionSheet
 } from "fluent-styles";
 import { dialogueService, toastService } from "fluent-styles";
 import { format, isToday, isTomorrow, isPast } from "date-fns";
@@ -180,78 +180,38 @@ export default function HomeworkScreen() {
           </Stack>
         }
       />
-      {loading ? (
-        <Stack padding={16}>
-          <StyledSkeleton template="list-item" repeat={4} />
-        </Stack>
-      ) : homeworks.length === 0 ? (
-        <StyledEmptyState
-          variant="minimal"
-          illustration="🎉"
-          title="No homework!"
-          description="Enjoy your free time 🎊"
-          animated
-        />
-      ) : (
-        <ScrollView
-          contentContainerStyle={{
-            paddingTop: 16,
-            paddingHorizontal: 16,
-            paddingBottom: 140,
-          }}
-        >
-          {/* Pending */}
-          {pending.length > 0 && (
-            <StyledCard
-              marginBottom={8}
-              borderRadius={16}
-              backgroundColor={Colors.bgCard}
-              borderWidth={1}
-              borderColor={Colors.border}
-              overflow="hidden"
-            >
-              {pending.map((hw, i) => {
-                const sub = subjectMap[hw.subjectId ?? ""];
-                return (
-                  <Stack key={hw.id}>
-                    <HomeworkRow
-                      hw={hw}
-                      subjectName={sub?.name ?? "Unknown"}
-                      subjectColor={sub?.color ?? Colors.primary}
-                      onToggle={toggleDone}
-                      onDelete={handleDelete}
-                    />
-                    {i < pending.length - 1 && (
-                      <StyledDivider
-                        borderBottomColor={Colors.border}
-                        marginLeft={56}
-                      />
-                    )}
-                  </Stack>
-                );
-              })}
-            </StyledCard>
-          )}
-
-          {/* Done section */}
-          {showDone && done.length > 0 && (
-            <>
-              <Text
-                variant="label"
-                color={Colors.textMuted}
-                letterSpacing={0.5}
-                paddingBottom={8}
-              >
-                Completed ({done.length})
-              </Text>
+      <Stack flex={1} >
+        {loading ? (
+          <Stack padding={16}>
+            <StyledSkeleton template="list-item" repeat={4} />
+          </Stack>
+        ) : homeworks.length === 0 ? (
+          <StyledEmptyState
+            variant="minimal"
+            illustration="🎉"
+            title="No homework!"
+            description="Enjoy your free time 🎊"
+            animated
+          />
+        ) : (
+          <ScrollView
+            contentContainerStyle={{
+              paddingTop: 16,
+              paddingHorizontal: 16,
+              paddingBottom: 140,
+            }}
+          >
+            {/* Pending */}
+            {pending.length > 0 && (
               <StyledCard
+                marginBottom={8}
                 borderRadius={16}
                 backgroundColor={Colors.bgCard}
                 borderWidth={1}
                 borderColor={Colors.border}
                 overflow="hidden"
               >
-                {done.map((hw, i) => {
+                {pending.map((hw, i) => {
                   const sub = subjectMap[hw.subjectId ?? ""];
                   return (
                     <Stack key={hw.id}>
@@ -262,7 +222,7 @@ export default function HomeworkScreen() {
                         onToggle={toggleDone}
                         onDelete={handleDelete}
                       />
-                      {i < done.length - 1 && (
+                      {i < pending.length - 1 && (
                         <StyledDivider
                           borderBottomColor={Colors.border}
                           marginLeft={56}
@@ -272,47 +232,89 @@ export default function HomeworkScreen() {
                   );
                 })}
               </StyledCard>
-            </>
-          )}
-        </ScrollView>
-      )}
+            )}
 
-      {/* FAB — above floating tab bar */}
-      <StyledPressable
-        position="absolute"
-        right={20}
-        bottom={90}
-        width={58}
-        height={58}
-        borderRadius={29}
-        backgroundColor={Colors.primary}
-        alignItems="center"
-        justifyContent="center"
-        onPress={() => setShowAdd(true)}
-        style={{
-          shadowColor: Colors.primaryDark,
-          shadowOffset: { width: 0, height: 6 },
-          shadowOpacity: 0.35,
-          shadowRadius: 10,
-          elevation: 8,
-        }}
-      >
-        <StyledText
-          fontSize={28}
-          color={Colors.white}
-          style={{ lineHeight: 32 }}
+            {/* Done section */}
+            {showDone && done.length > 0 && (
+              <>
+                <Text
+                  variant="label"
+                  color={Colors.textMuted}
+                  letterSpacing={0.5}
+                  paddingBottom={8}
+                >
+                  Completed ({done.length})
+                </Text>
+                <StyledCard
+                  borderRadius={16}
+                  backgroundColor={Colors.bgCard}
+                  borderWidth={1}
+                  borderColor={Colors.border}
+                  overflow="hidden"
+                >
+                  {done.map((hw, i) => {
+                    const sub = subjectMap[hw.subjectId ?? ""];
+                    return (
+                      <Stack key={hw.id}>
+                        <HomeworkRow
+                          hw={hw}
+                          subjectName={sub?.name ?? "Unknown"}
+                          subjectColor={sub?.color ?? Colors.primary}
+                          onToggle={toggleDone}
+                          onDelete={handleDelete}
+                        />
+                        {i < done.length - 1 && (
+                          <StyledDivider
+                            borderBottomColor={Colors.border}
+                            marginLeft={56}
+                          />
+                        )}
+                      </Stack>
+                    );
+                  })}
+                </StyledCard>
+              </>
+            )}
+          </ScrollView>
+        )}
+
+        {/* FAB — above floating tab bar */}
+        <StyledPressable
+          position="absolute"
+          right={20}
+          bottom={90}
+          width={58}
+          height={58}
+          borderRadius={29}
+          backgroundColor={Colors.primary}
+          alignItems="center"
+          justifyContent="center"
+          onPress={() => setShowAdd(true)}
+          style={{
+            shadowColor: Colors.primaryDark,
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 0.35,
+            shadowRadius: 10,
+            elevation: 8,
+          }}
         >
-          +
-        </StyledText>
-      </StyledPressable>
+          <StyledText
+            fontSize={28}
+            color={Colors.white}
+            style={{ lineHeight: 32 }}
+          >
+            +
+          </StyledText>
+        </StyledPressable>
 
-      <AddHomeworkSheet
-        visible={showAdd}
-        onClose={() => {
-          setShowAdd(false);
-          refetch();
-        }}
-      />
+        <AddHomeworkSheet
+          visible={showAdd}
+          onClose={() => {
+            setShowAdd(false);
+            refetch();
+          }}
+        />
+      </Stack>
     </StyledPage>
   );
 }

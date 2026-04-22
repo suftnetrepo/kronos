@@ -4,6 +4,7 @@ import { Tabs } from 'expo-router'
 import { FloatingTabBar } from '../../src/components/FloatingTabBar'
 import { useSettings } from '../../src/hooks/useSettings'
 import { useSettingsStore } from '../../src/stores'
+import { TAB_ROUTES, type TabName } from '../../src/constants'
 
 export default function TabsLayout() {
   const router = useRouter()
@@ -16,7 +17,8 @@ export default function TabsLayout() {
 
     // Defer to next frame to ensure Tabs navigator is fully initialized
     const timer = requestAnimationFrame(() => {
-      router.replace(`/(tabs)/${defaultTab}` as any)
+      const route = TAB_ROUTES[defaultTab as TabName]
+      router.replace(route)
     })
 
     return () => cancelAnimationFrame(timer)

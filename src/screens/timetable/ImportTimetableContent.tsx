@@ -176,6 +176,12 @@ export function ImportTimetableContent({ onDone }: ImportTimetableContentProps) 
 
   // ── Render preview UI ──────────────────────────────────────────────────────
   if (showPreview && preview) {
+    // Calculate how many subjects can be imported based on merge mode
+    const importableCount = mergeDuplicates
+      ? (preview.summary.total - preview.summary.conflicts)  // Import all except conflicts
+      : preview.summary.new                                  // Import only new subjects
+    const canImport = preview.valid && preview.errors.length === 0 && importableCount > 0
+
     return (
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -229,6 +235,32 @@ export function ImportTimetableContent({ onDone }: ImportTimetableContentProps) 
                 </StyledText>
                 <StyledText fontSize={11} color={Colors.textMuted} marginTop={2}>
                   {err.reason}
+                </StyledText>
+              </Stack>
+            ))}
+          </Stack>
+        )}
+
+        {/* Non-blocking warnings (e.g., color fallback) */}
+        {(preview.warnings?.length ?? 0) > 0 && (
+          <Stack gap={8} marginBottom={20}>
+            <StyledText fontSize={12} fontWeight="700" color={Colors.warning}>
+              💡 ADJUSTMENTS ({preview.warnings?.length ?? 0})
+            </StyledText>
+            {(preview.warnings || []).map((warn, i) => (
+              <Stack
+                key={i}
+                paddingVertical={10} paddingHorizontal={12}
+                borderRadius={10}
+                backgroundColor={Colors.warning + '10'}
+                borderLeftWidth={3}
+                borderLeftColor={Colors.warning}
+              >
+                <StyledText fontSize={11} fontWeight="600" color={Colors.warning}>
+                  {warn.index >= 0 ? `Subject #${warn.index + 1}` : 'Import'}: {warn.field}
+                </StyledText>
+                <StyledText fontSize={11} color={Colors.textMuted} marginTop={2}>
+                  {warn.reason}
                 </StyledText>
               </Stack>
             ))}
@@ -320,6 +352,23 @@ export function ImportTimetableContent({ onDone }: ImportTimetableContentProps) 
           ))}
         </Stack>
 
+        {/* All duplicates message */}
+        {preview.duplicates.length === preview.summary.total && preview.summary.total > 0 && (
+          <Stack
+            paddingVertical={12} paddingHorizontal={14}
+            borderRadius={12}
+            backgroundColor={Colors.warning + '15'}
+            borderWidth={1}
+            borderColor={Colors.warning + '30'}
+            marginBottom={16}
+          >
+            <StyledText fontSize={12} fontWeight="600" color={Colors.warning} marginBottom={8}>ℹ️ All subjects already exist</StyledText>
+            <StyledText fontSize={11} color={Colors.textMuted} lineHeight={16}>
+              These are all the same subjects already in your timetable. You can import them anyway to create duplicates with the same name.
+            </StyledText>
+          </Stack>
+        )}
+
         {/* Merge toggle (only show if there are duplicates) */}
         {preview.duplicates.length > 0 && (
           <Stack
@@ -333,10 +382,10 @@ export function ImportTimetableContent({ onDone }: ImportTimetableContentProps) 
             <Stack horizontal alignItems="center" justifyContent="space-between" gap={12}>
               <Stack flex={1} gap={2}>
                 <StyledText fontSize={13} fontWeight="600" color={Colors.textPrimary}>
-                  {mergeDuplicates ? '✓' : '✗'} Allow duplicates
+                  {mergeDuplicates ? '✓' : '✗'} Import duplicates
                 </StyledText>
                 <StyledText fontSize={11} color={Colors.textMuted}>
-                  {mergeDuplicates ? 'Will create new subjects even if name exists' : 'Skip if name already exists'}
+                  {mergeDuplicates ? 'Will import even if subjects already exist' : 'Skip if subjects already exist'}
                 </StyledText>
               </Stack>
               <StyledPressable
@@ -364,13 +413,13 @@ export function ImportTimetableContent({ onDone }: ImportTimetableContentProps) 
           <StyledPressable
             flexDirection="row" alignItems="center" justifyContent="center" gap={10}
             paddingVertical={14} borderRadius={14}
-            backgroundColor={preview.valid && preview.summary.new > 0 ? Colors.primary : Colors.primary + '60'}
+            backgroundColor={canImport ? Colors.primary : Colors.primary + '60'}
             onPress={handleConfirmImport}
-            disabled={!preview.valid || preview.summary.new === 0}
+            disabled={!canImport}
           >
             <StyledText fontSize={15} fontWeight="700" color="#fff">↓</StyledText>
             <StyledText fontSize={15} fontWeight="700" color="#fff">
-              Import {preview.summary.new} subject{preview.summary.new !== 1 ? 's' : ''}
+              Import {importableCount} subject{importableCount !== 1 ? 's' : ''}
             </StyledText>
           </StyledPressable>
 

@@ -22,7 +22,7 @@ import {
   actionSheetService,
 } from "fluent-styles";
 import { Text } from "../../components";
-import { useColors, THEMES } from "../../constants";
+import { useColors, THEMES, TAB_ROUTES, type TabName } from "../../constants";
 import { THEME_META } from "../../constants/themes";
 import { THEME_ICONS } from "../../constants/icons";
 import type { ThemeKey } from "../../constants";
@@ -534,7 +534,7 @@ export default function SettingsScreen() {
             paddingVertical={14}
             onPress={async () => {
               await appSettings.setDefaultTab('index')
-              router.replace('/(tabs)/index' as any)
+              router.replace(TAB_ROUTES.index)
             }}
             backgroundColor={appSettings.defaultTab === 'index' ? Colors.primary + '15' : 'transparent'}
           >
@@ -562,7 +562,7 @@ export default function SettingsScreen() {
             paddingVertical={14}
             onPress={async () => {
               await appSettings.setDefaultTab('homework')
-              router.replace('/(tabs)/homework' as any)
+              router.replace(TAB_ROUTES.homework)
             }}
             backgroundColor={appSettings.defaultTab === 'homework' ? Colors.primary + '15' : 'transparent'}
           >
@@ -590,7 +590,7 @@ export default function SettingsScreen() {
             paddingVertical={14}
             onPress={async () => {
               await appSettings.setDefaultTab('exams')
-              router.replace('/(tabs)/exams' as any)
+              router.replace(TAB_ROUTES.exams)
             }}
             backgroundColor={appSettings.defaultTab === 'exams' ? Colors.primary + '15' : 'transparent'}
           >

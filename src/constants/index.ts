@@ -18,6 +18,16 @@ export const STORAGE_KEYS = {
   THEME: 'kronos_theme',
 } as const
 
+// Tab navigation routes - public paths (not route group syntax)
+export const TAB_ROUTES = {
+  index:    '/',
+  homework: '/homework',
+  exams:    '/exams',
+  settings: '/settings',
+} as const
+
+export type TabName = keyof typeof TAB_ROUTES
+
 // Class/timetable reminder options in minutes
 export const REMINDER_OPTIONS = [
   { label: 'None',        value: null },

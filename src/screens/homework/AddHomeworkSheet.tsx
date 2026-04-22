@@ -78,12 +78,14 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
   }, [premium, allHomework, title, desc, subjectId, dueDate, create, invalidateData, onClose])
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Stack flex={1} backgroundColor="rgba(0,0,0,0.45)" justifyContent="flex-end">
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Stack flex={1} backgroundColor="rgba(0,0,0,0.45)" justifyContent="center" alignItems="center">
         <Stack
+          maxHeight="95%"
+          width="100%"
+          maxWidth={450}
           backgroundColor={Colors.bgCard}
-          borderTopLeftRadius={28} borderTopRightRadius={28}
-          maxHeight="85%"
+          borderRadius={28}
         >
           {/* Handle */}
           <Stack alignItems="center" paddingTop={12} paddingBottom={4}>
@@ -115,6 +117,7 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
                 variant="filled" placeholder="e.g. Chapter 5 exercises"
                 value={title} onChangeText={setTitle}
                 fontSize={15} borderRadius={12} autoFocus
+                 returnKeyType='next'
               />
             </Stack>
 
@@ -128,6 +131,7 @@ export function AddHomeworkSheet({ visible, onClose }: AddHomeworkSheetProps) {
                 value={desc} onChangeText={setDesc}
                 fontSize={14} borderRadius={12}
                 multiline numberOfLines={3}
+                returnKeyType='next'
               />
             </Stack>
 
