@@ -12,6 +12,7 @@ interface SettingsState extends AppSettings {
   setLockEnabled: (enabled: boolean) => Promise<void>
   setBiometricEnabled: (enabled: boolean) => Promise<void>
   setRemindersEnabled: (enabled: boolean) => Promise<void>
+  setDefaultTab: (tab: 'index' | 'homework' | 'exams') => Promise<void>
 }
 
 export const useSettingsStore = create<SettingsState>((set) => ({
@@ -19,6 +20,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   lockEnabled: false,
   biometricEnabled: false,
   remindersEnabled: true,
+  defaultTab: 'index',
   bootReady: false,
 
   // Hydrate from DB on app start
@@ -29,6 +31,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         lockEnabled: all.lockEnabled,
         biometricEnabled: all.biometricEnabled,
         remindersEnabled: all.remindersEnabled,
+        defaultTab: all.defaultTab,
         bootReady: true,
       })
     } catch (err) {
@@ -64,6 +67,15 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       await setSetting('remindersEnabled', enabled)
     } catch (err) {
       console.error('[useSettingsStore] Failed to save remindersEnabled:', err)
+    }
+  },
+
+  setDefaultTab: async (tab) => {
+    set({ defaultTab: tab })
+    try {
+      await setSetting('defaultTab', tab)
+    } catch (err) {
+      console.error('[useSettingsStore] Failed to save defaultTab:', err)
     }
   },
 }))

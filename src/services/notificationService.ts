@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications'
 import type { Subject, Day }  from '../db/schema'
 import { DAY_FULL }            from '../db/schema'
 import { db } from '../db'
-import { subjects } from '../db/schema'
+import { subjects, exams } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import { getSetting } from './settings.service'
 
@@ -294,5 +294,67 @@ export const forceResyncAllReminders = async (): Promise<number> => {
   } catch (err) {
     console.error('[notificationService] Error in forceResyncAllReminders:', err)
     return 0
+  }
+}
+
+// ─── Schedule one-time reminder for an exam ────────────────────────────────────
+// Returns notification ID if scheduled, null if skipped
+export const scheduleExamReminder = async (
+  examId: string,
+  examTitle: string,
+  examDate: Date,
+  reminderMinutes: number
+): Promise<string | null> => {
+  // Check if reminders are globally enabled
+  const remindersEnabled = await getSetting<boolean>('remindersEnabled')
+  if (!remindersEnabled) {
+    console.log('[notificationService] Reminders disabled globally, skipping exam reminder')
+    return null
+  }
+
+  const hasPermission = await hasNotificationPermission()
+  if (!hasPermission) {
+    console.log('[notificationService] No notification permission, skipping exam reminder')
+    return null
+  }
+
+  // Calculate trigger time = exam time - reminder minutes
+  const triggerDate = new Date(examDate.getTime() - reminderMinutes * 60 * 1000)
+  const now = new Date()
+
+  // Skip if trigger time is in the past
+  if (triggerDate <= now) {
+    console.log(`[notificationService] Exam reminder time is in the past, skipping`)
+    return null
+  }
+
+  try {
+    const id = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `📝 ${examTitle} in ${reminderMinutes < 60 ? reminderMinutes + ' min' : Math.round(reminderMinutes / 60) + ' hour' + (Math.round(reminderMinutes / 60) !== 1 ? 's' : '')}`,
+        body: `Exam at ${examDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
+        data: { examId },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: triggerDate,
+      },
+    })
+    console.log(`[notificationService] Scheduled exam reminder for "${examTitle}" (ID: ${id})`)
+    return id
+  } catch (err) {
+    console.error('[notificationService] Failed to schedule exam reminder:', err)
+    return null
+  }
+}
+
+// ─── Cancel a single exam reminder ─────────────────────────────────────────────
+export const cancelExamReminder = async (reminderId: string | null): Promise<void> => {
+  if (!reminderId) return
+  try {
+    await Notifications.cancelScheduledNotificationAsync(reminderId)
+    console.log(`[notificationService] Cancelled exam reminder (ID: ${reminderId})`)
+  } catch (err) {
+    console.warn(`[notificationService] Failed to cancel exam reminder ${reminderId}:`, err)
   }
 }

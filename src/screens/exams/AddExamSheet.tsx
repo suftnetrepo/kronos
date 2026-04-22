@@ -2,14 +2,16 @@ import React, { useState, useCallback } from 'react'
 import { ScrollView, Modal } from 'react-native'
 import {
   Stack, StyledText, StyledPressable, StyledTextInput,
-  StyledDatePicker,
+  StyledDatePicker, StyledDivider, Switch,
 } from 'fluent-styles'
 import { toastService, loaderService } from 'fluent-styles'
 import { format } from 'date-fns'
 import { useColors } from '../../constants'
+import { EXAM_REMINDER_OPTIONS } from '../../constants'
 import { useExams } from '../../hooks/useExams'
 import { useSubjects } from '../../hooks'
 import { usePremium } from '../../hooks/usePremium'
+import { requestNotificationPermission } from '../../services/notificationService'
 import type { Subject } from '../../db/schema'
 
 interface AddExamSheetProps {
@@ -23,19 +25,37 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
   const { data: subjects }         = useSubjects()
   const premium                    = usePremium()
 
-  const [title,        setTitle]        = useState('')
-  const [notes,        setNotes]        = useState('')
-  const [room,         setRoom]         = useState('')
-  const [subjectId,    setSubjectId]    = useState<string | null>(null)
-  const [examDate,     setExamDate]     = useState<Date>(new Date())
-  const [showDate,     setShowDate]     = useState(false)
-  const [showSubjects, setShowSubjects] = useState(false)
+  const [title,          setTitle]          = useState('')
+  const [notes,          setNotes]          = useState('')
+  const [room,           setRoom]           = useState('')
+  const [subjectId,      setSubjectId]      = useState<string | null>(null)
+  const [examDate,       setExamDate]       = useState<Date>(new Date())
+  const [reminder,       setReminder]       = useState<number | null>(null)
+  const [reminderOn,     setReminderOn]     = useState(false)
+  const [showDate,       setShowDate]       = useState(false)
+  const [showSubjects,   setShowSubjects]   = useState(false)
 
   const selectedSubject = subjects.find(s => s.id === subjectId)
 
   const reset = () => {
     setTitle(''); setNotes(''); setRoom('')
-    setSubjectId(null); setExamDate(new Date()); setShowDate(false)
+    setSubjectId(null); setExamDate(new Date())
+    setReminder(null); setReminderOn(false)
+    setShowDate(false); setShowSubjects(false)
+  }
+
+  const handleReminderToggle = async (on: boolean) => {
+    if (on) {
+      const granted = await requestNotificationPermission()
+      if (!granted) {
+        toastService.warning('Notifications disabled', 'Enable in Settings to use reminders')
+        return
+      }
+      setReminder(60)
+    } else {
+      setReminder(null)
+    }
+    setReminderOn(on)
   }
 
   const handleSave = useCallback(async () => {
@@ -61,6 +81,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
           room:      room.trim()  || null,
           subjectId: subjectId ?? null,
           date:      examDate,
+          reminder:  reminderOn ? reminder : null,
         }),
         { label: 'Saving…', variant: 'spinner' },
       )
@@ -181,6 +202,52 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
                 multiline numberOfLines={3}
               />
             </Stack>
+
+            {/* Reminder toggle */}
+            <StyledDivider borderBottomColor={Colors.border} marginBottom={16} />
+            <Stack flexDirection="row" alignItems="center" justifyContent="space-between"
+              marginBottom={reminderOn ? 12 : 0}>
+              <Stack gap={2}>
+                <StyledText fontSize={15} fontWeight="700" color={Colors.textPrimary}>
+                  🔔 Exam reminder
+                </StyledText>
+                <StyledText fontSize={12} color={Colors.textMuted}>
+                  Get notified before exam
+                </StyledText>
+              </Stack>
+              <Switch value={reminderOn} onChange={handleReminderToggle}
+                activeColor={Colors.primary} />
+            </Stack>
+
+            {/* Reminder duration */}
+            {reminderOn && (
+              <Stack gap={8}>
+                <StyledText fontSize={12} fontWeight="700" color={Colors.textMuted} letterSpacing={0.5}>
+                  NOTIFY ME
+                </StyledText>
+                <Stack flexDirection="row" flexWrap="wrap" gap={8}>
+                  {EXAM_REMINDER_OPTIONS.filter(o => o.value !== null).map(opt => {
+                    const active = reminder === opt.value
+                    return (
+                      <StyledPressable
+                        key={opt.value}
+                        paddingHorizontal={14} paddingVertical={9}
+                        borderRadius={12}
+                        borderWidth={2}
+                        borderColor={active ? Colors.primary : Colors.border}
+                        backgroundColor={active ? Colors.primary + '15' : Colors.bgCard}
+                        onPress={() => setReminder(opt.value as number)}
+                      >
+                        <StyledText fontSize={13} fontWeight="700"
+                          color={active ? Colors.primary : Colors.textMuted}>
+                          {opt.label}
+                        </StyledText>
+                      </StyledPressable>
+                    )
+                  })}
+                </Stack>
+              </Stack>
+            )}
 
           </ScrollView>
         </Stack>

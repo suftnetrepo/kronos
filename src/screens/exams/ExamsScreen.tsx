@@ -11,6 +11,7 @@ import {
   StyledSkeleton,
   theme,
   StyledPage,
+  StyledSpacer,
 } from "fluent-styles";
 import { dialogueService, toastService } from "fluent-styles";
 import { format, differenceInDays, isToday, isTomorrow } from "date-fns";
@@ -149,8 +150,8 @@ function SectionLabel({ label, count }: { label: string; count: number }) {
       horizontal
       alignItems="center"
       gap={8}
-      paddingTop={20}
       paddingBottom={8}
+      marginHorizontal={8}
     >
       <Text
         variant="label"
@@ -222,13 +223,13 @@ export default function ExamsScreen() {
   );
 
   return (
-    <StyledPage flex={1} backgroundColor={Colors.bg}>
+    <StyledPage backgroundColor={Colors.bg}>
       <StyledPage.Header
         paddingHorizontal={4}
         marginHorizontal={16}
         borderRadius={30}
         paddingRight={8}
-        paddingVertical={8}
+    
         backArrowProps={{ onPress: () => router.back() }}
         shapeProps={{
           size: 40,
@@ -331,10 +332,12 @@ export default function ExamsScreen() {
             {/* ── Past ───────────────────────────────────────────────── */}
             {showPast && past.length > 0 && (
               <>
+              <StyledSpacer marginVertical={4} />
                 <SectionLabel label="Past" count={past.length} />
                 <StyledCard
                   shadow="light"
                   borderRadius={16}
+                  
                   backgroundColor={Colors.bgCard}
                   borderWidth={1}
                   borderColor={Colors.border}

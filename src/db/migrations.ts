@@ -58,4 +58,11 @@ export const SQL_MIGRATIONS = [
 
   // Migration 003 — add reminder IDs tracking to subjects (Phase 3)
   `ALTER TABLE subjects ADD COLUMN reminder_ids TEXT;`,
+
+  // Migration 004 — add default tab setting (Phase 4)
+  `ALTER TABLE settings ADD COLUMN default_tab TEXT NOT NULL DEFAULT 'index';`,
+
+  // Migration 005 — add exam reminders (Phase 5)
+  `ALTER TABLE exams ADD COLUMN reminder INTEGER;
+  ALTER TABLE exams ADD COLUMN reminder_id TEXT;`,
 ]

@@ -42,7 +42,7 @@ function SubjectCard({
   const Colors = useColors();
   return (
     <StyledPressable onPress={() => onEdit(subject)}>
-      <Stack flexDirection="row" gap={0} marginBottom={12}>
+      <Stack flexDirection="row" gap={0} marginBottom={8}>
         {/* Time column */}
         <Stack
           alignItems="flex-end"
@@ -424,7 +424,7 @@ export default function HomeScreen() {
           </Stack>
         </Stack>
 
-        <StyledSpacer marginVertical={12} />
+        <StyledSpacer marginVertical={8} />
         {/* Day chips — horizontal scroll */}
         <ScrollView
           ref={chipScrollRef}
@@ -463,7 +463,7 @@ export default function HomeScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ padding: 20, paddingBottom: 140 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingVertical:16, paddingBottom: 140 }}
         >
           {subjects.map((subject) => (
             <SubjectCard

@@ -43,15 +43,19 @@ export const homework = sqliteTable('homework', {
 // ─── Exams ────────────────────────────────────────────────────────────────────
 
 export const exams = sqliteTable('exams', {
-  id:          text('id').primaryKey(),
-  subjectId:   text('subject_id')
-               .references(() => subjects.id, { onDelete: 'set null' }),
-  title:       text('title').notNull(),
-  date:        integer('date', { mode: 'timestamp' }).notNull(),
-  room:        text('room'),
-  notes:       text('notes'),
-  createdAt:   integer('created_at', { mode: 'timestamp' }).notNull(),
-  updatedAt:   integer('updated_at', { mode: 'timestamp' }).notNull(),
+  id:           text('id').primaryKey(),
+  subjectId:    text('subject_id')
+                .references(() => subjects.id, { onDelete: 'set null' }),
+  title:        text('title').notNull(),
+  date:         integer('date', { mode: 'timestamp' }).notNull(),
+  room:         text('room'),
+  notes:        text('notes'),
+  // Exam reminder: null = off, minutes before exam (60/1440/4320/10080 = 1h/1d/3d/1w)
+  reminder:     integer('reminder'),
+  // Notification ID for the scheduled exam reminder
+  reminderId:   text('reminder_id'),
+  createdAt:    integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt:    integer('updated_at', { mode: 'timestamp' }).notNull(),
 })
 
 // ─── Settings (singleton) ─────────────────────────────────────────────────────
@@ -67,6 +71,7 @@ export const settings = sqliteTable('settings', {
   lockEnabled:          integer('lock_enabled', { mode: 'boolean' }).notNull().default(false),
   biometricEnabled:     integer('biometric_enabled', { mode: 'boolean' }).notNull().default(false),
   remindersEnabled:     integer('reminders_enabled', { mode: 'boolean' }).notNull().default(true),
+  defaultTab:           text('default_tab').notNull().default('index'),
   downloadedExportPath: text('downloaded_export_path'),
   updatedAt:            integer('updated_at', { mode: 'timestamp' }).notNull(),
 })

@@ -207,6 +207,7 @@ export default function SettingsScreen() {
           await db.insert(settings).values({
             id: "singleton",
             firstDayOfWeek: "MON",
+            defaultTab: "index",
             updatedAt: new Date(),
           });
         },
@@ -493,6 +494,117 @@ export default function SettingsScreen() {
             <StyledText fontSize={16} color={Colors.textMuted}>
               ›
             </StyledText>
+          </StyledPressable>
+        </StyledCard>
+
+        {/* ── Navigation ────────────────────────────────────────────── */}
+        <SectionHeader label="Navigation" />
+        <StyledCard
+          shadow="light"
+          marginHorizontal={16}
+          borderRadius={16}
+          backgroundColor={Colors.bgCard}
+          borderWidth={1}
+          borderColor={Colors.border}
+          overflow="hidden"
+        >
+          <Stack
+            horizontal
+            alignItems="center"
+            gap={14}
+            paddingHorizontal={20}
+            paddingVertical={14}
+          >
+            <Stack flex={1} gap={2}>
+              <Text variant="subtitle" color={Colors.textPrimary}>
+                Default start tab
+              </Text>
+              <Text variant="bodySmall" color={Colors.textMuted}>
+                Which tab opens on app launch
+              </Text>
+            </Stack>
+          </Stack>
+
+          {/* Timetable option */}
+          <StyledPressable
+            flexDirection="row"
+            alignItems="center"
+            gap={14}
+            paddingHorizontal={20}
+            paddingVertical={14}
+            onPress={async () => {
+              await appSettings.setDefaultTab('index')
+              router.replace('/(tabs)/index' as any)
+            }}
+            backgroundColor={appSettings.defaultTab === 'index' ? Colors.primary + '15' : 'transparent'}
+          >
+            <Stack flex={1} gap={2}>
+              <Text
+                variant="subtitle"
+                color={appSettings.defaultTab === 'index' ? Colors.primary : Colors.textPrimary}
+              >
+                Timetable
+              </Text>
+            </Stack>
+            {appSettings.defaultTab === 'index' && (
+              <Checkmark size={18} color={Colors.primary} strokeWidth={2} />
+            )}
+          </StyledPressable>
+
+          <StyledDivider height={0.3} borderBottomColor={Colors.border} />
+
+          {/* Homework option */}
+          <StyledPressable
+            flexDirection="row"
+            alignItems="center"
+            gap={14}
+            paddingHorizontal={20}
+            paddingVertical={14}
+            onPress={async () => {
+              await appSettings.setDefaultTab('homework')
+              router.replace('/(tabs)/homework' as any)
+            }}
+            backgroundColor={appSettings.defaultTab === 'homework' ? Colors.primary + '15' : 'transparent'}
+          >
+            <Stack flex={1} gap={2}>
+              <Text
+                variant="subtitle"
+                color={appSettings.defaultTab === 'homework' ? Colors.primary : Colors.textPrimary}
+              >
+                Homework
+              </Text>
+            </Stack>
+            {appSettings.defaultTab === 'homework' && (
+              <Checkmark size={18} color={Colors.primary} strokeWidth={2} />
+            )}
+          </StyledPressable>
+
+          <StyledDivider height={0.3} borderBottomColor={Colors.border} />
+
+          {/* Exams option */}
+          <StyledPressable
+            flexDirection="row"
+            alignItems="center"
+            gap={14}
+            paddingHorizontal={20}
+            paddingVertical={14}
+            onPress={async () => {
+              await appSettings.setDefaultTab('exams')
+              router.replace('/(tabs)/exams' as any)
+            }}
+            backgroundColor={appSettings.defaultTab === 'exams' ? Colors.primary + '15' : 'transparent'}
+          >
+            <Stack flex={1} gap={2}>
+              <Text
+                variant="subtitle"
+                color={appSettings.defaultTab === 'exams' ? Colors.primary : Colors.textPrimary}
+              >
+                Exams
+              </Text>
+            </Stack>
+            {appSettings.defaultTab === 'exams' && (
+              <Checkmark size={18} color={Colors.primary} strokeWidth={2} />
+            )}
           </StyledPressable>
         </StyledCard>
 

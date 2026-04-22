@@ -1,8 +1,27 @@
-import React from 'react'
+import React, { useEffect } from 'react'
+import { useRouter } from 'expo-router'
 import { Tabs } from 'expo-router'
 import { FloatingTabBar } from '../../src/components/FloatingTabBar'
+import { useSettings } from '../../src/hooks/useSettings'
+import { useSettingsStore } from '../../src/stores'
 
 export default function TabsLayout() {
+  const router = useRouter()
+  const { defaultTab } = useSettings()
+  const { bootReady } = useSettingsStore()
+
+  // After settings are hydrated and Tabs mounts, redirect to the selected default tab
+  useEffect(() => {
+    if (!bootReady || !defaultTab || defaultTab === 'index') return
+
+    // Defer to next frame to ensure Tabs navigator is fully initialized
+    const timer = requestAnimationFrame(() => {
+      router.replace(`/(tabs)/${defaultTab}` as any)
+    })
+
+    return () => cancelAnimationFrame(timer)
+  }, [bootReady, defaultTab, router])
+
   return (
     <Tabs
       tabBar={(props) => <FloatingTabBar {...props} />}

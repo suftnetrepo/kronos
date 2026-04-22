@@ -13,6 +13,7 @@ export interface AppSettings {
   lockEnabled: boolean
   biometricEnabled: boolean
   remindersEnabled: boolean
+  defaultTab: 'index' | 'homework' | 'exams'
   downloadedExportPath?: string
 }
 
@@ -20,6 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   lockEnabled: false,
   biometricEnabled: false,
   remindersEnabled: true,
+  defaultTab: 'index',
 }
 
 /**
@@ -105,6 +107,7 @@ export const getAllSettings = async (): Promise<AppSettings> => {
       lockEnabled: record.lockEnabled ?? DEFAULT_SETTINGS.lockEnabled,
       biometricEnabled: record.biometricEnabled ?? DEFAULT_SETTINGS.biometricEnabled,
       remindersEnabled: record.remindersEnabled ?? DEFAULT_SETTINGS.remindersEnabled,
+      defaultTab: (record.defaultTab as any) ?? DEFAULT_SETTINGS.defaultTab,
       downloadedExportPath: record.downloadedExportPath ?? undefined,
     } as AppSettings
   } catch (err) {

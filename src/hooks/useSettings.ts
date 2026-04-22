@@ -5,16 +5,18 @@ import { useSettingsStore } from '../stores/settings.store'
  * Custom hook to access and update app settings
  *
  * Usage:
- *   const { lockEnabled, setLockEnabled } = useSettings()
+ *   const { lockEnabled, setLockEnabled, defaultTab, setDefaultTab } = useSettings()
  */
 export const useSettings = () => {
   const {
     lockEnabled,
     biometricEnabled,
     remindersEnabled,
+    defaultTab,
     setLockEnabled,
     setBiometricEnabled,
     setRemindersEnabled,
+    setDefaultTab,
   } = useSettingsStore()
 
   const updateLock = useCallback(
@@ -32,12 +34,19 @@ export const useSettings = () => {
     [setRemindersEnabled]
   )
 
+  const updateDefaultTab = useCallback(
+    (tab: 'index' | 'homework' | 'exams') => setDefaultTab(tab),
+    [setDefaultTab]
+  )
+
   return {
     lockEnabled,
     biometricEnabled,
     remindersEnabled,
+    defaultTab,
     setLockEnabled: updateLock,
     setBiometricEnabled: updateBiometric,
     setRemindersEnabled: updateReminders,
+    setDefaultTab: updateDefaultTab,
   }
 }

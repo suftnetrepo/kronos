@@ -69,9 +69,9 @@ export default function PremiumScreen() {
     <Stack flex={1} backgroundColor={Colors.bg}>
 
       {/* Close button */}
-      <Stack position="absolute" top={16} right={20} zIndex={10}>
+      <Stack paddingVertical={16} paddingHorizontal={24}  zIndex={10} alignItems='flex-end' justifyContent='flex-end' >
         <StyledPressable
-          width={32} height={32} borderRadius={16}
+          width={48} height={48} borderRadius={999}
           backgroundColor={Colors.bgMuted}
           alignItems="center" justifyContent="center"
           onPress={() => router.back()}
@@ -85,7 +85,7 @@ export default function PremiumScreen() {
 
         {/* ── Hero ──────────────────────────────────────────────────── */}
         <Stack alignItems="center" paddingHorizontal={24}
-          paddingTop={20} paddingBottom={20}>
+          paddingBottom={20}>
           <Stack horizontal alignItems="center" gap={10} marginBottom={6}>
             <Stack
               width={40} height={40} borderRadius={20}

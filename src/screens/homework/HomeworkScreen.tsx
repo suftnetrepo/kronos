@@ -152,7 +152,7 @@ export default function HomeworkScreen() {
   );
 
   return (
-    <StyledPage flex={1} backgroundColor={Colors.bg}>
+    <StyledPage backgroundColor={Colors.bg}>
       <StyledPage.Header
         paddingHorizontal={4}
         marginHorizontal={16}
