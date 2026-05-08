@@ -49,9 +49,7 @@ const KRONOS_PRODUCT_IDS = {
 // Entitlement identifier: "premium"
 // Offering identifier: "default"
 // API Keys: Test Store (dev) → Production (app store submission)
-const REVENUECAT_API_KEY = __DEV__
-  ? 'test_OiqxogdQQQsphMbZeRymGfZeery'  // Kronos Test Store (sandbox)
-  : 'appl_production_key_for_kronos'    // TODO: Production key before app store
+const REVENUECAT_API_KEY = 'appl_IAsJlKwTlgGIqbleOBLmAyRoJQj'
 
 // ─── State ────────────────────────────────────────────────────────────────
 

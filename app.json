@@ -72,9 +72,13 @@
       "typedRoutes": true
     },
     "extra": {
+      "router": {
+        "origin": false
+      },
       "eas": {
-        "projectId": "REPLACE_WITH_YOUR_EAS_PROJECT_ID"
+        "projectId": "f32dc322-a960-4299-b460-f42aad5e45f0"
       }
-    }
+    },
+    "owner": "kcmkcms"
   }
 }
