@@ -1,79 +1,107 @@
-import React, { useState } from 'react'
-import { ScrollView, ActivityIndicator } from 'react-native'
-import { router } from 'expo-router'
-import { Stack, StyledText, StyledPressable, StyledCard } from 'fluent-styles'
-import { Text } from '../../components'
-import { useColors } from '../../constants'
-import { PREMIUM_FEATURES, PREMIUM_PRICING } from '../../constants/premium'
-import { PREMIUM_FEATURE_ICONS, } from '../../constants/icons'
-import { BoltIcon } from '../../icons/ui'
-import { usePremium } from '../../hooks/usePremium'
+import React, { useState } from "react";
+import { ScrollView, ActivityIndicator, Linking } from "react-native";
+import { router } from "expo-router";
+import { Stack, StyledPressable, StyledCard } from "fluent-styles";
+import { Text } from "../../components";
+import { useColors } from "../../constants";
+import { PREMIUM_FEATURES, PREMIUM_PRICING } from "../../constants/premium";
+import { PREMIUM_FEATURE_ICONS } from "../../constants/icons";
+import { BoltIcon } from "../../icons/ui";
+import { usePremium } from "../../hooks/usePremium";
 
-type PlanKey = 'MONTHLY' | 'YEARLY' | 'ONE_TIME'
+type PlanKey = "MONTHLY" | "YEARLY" | "ONE_TIME";
 
 // ─── Feature row icon circles ──────────────────────────────────────────────────
-const FeatureIconCircle: React.FC<{ index: number; colors: ReturnType<typeof useColors> }> = ({ index, colors }) => {
-  const IconComponent = PREMIUM_FEATURE_ICONS[index]
+const FeatureIconCircle: React.FC<{
+  index: number;
+  colors: ReturnType<typeof useColors>;
+}> = ({ index, colors }) => {
+  const IconComponent = PREMIUM_FEATURE_ICONS[index];
   return (
     <Stack
-      width={40} height={40} borderRadius={20}
-      backgroundColor={colors.primary + '15'}
-      alignItems="center" justifyContent="center"
+      width={40}
+      height={40}
+      borderRadius={20}
+      backgroundColor={colors.primary + "15"}
+      alignItems="center"
+      justifyContent="center"
     >
-      {IconComponent && <IconComponent size={20} color={colors.primary} strokeWidth={2} />}
+      {IconComponent && (
+        <IconComponent size={20} color={colors.primary} strokeWidth={2} />
+      )}
     </Stack>
-  )
-}
+  );
+};
 
 // ─── Main screen ───────────────────────────────────────────────────────────────
 export default function PremiumScreen() {
-  const Colors  = useColors()
-  const premium = usePremium()
+  const Colors = useColors();
+  const premium = usePremium();
 
-  const [selected,    setSelected]    = useState<PlanKey>('YEARLY')
+  const [selected, setSelected] = useState<PlanKey>("YEARLY");
 
   const handlePurchasePress = async () => {
-    let success = false
-    if (selected === 'MONTHLY')  success = await premium.buyMonthly()
-    if (selected === 'YEARLY')   success = await premium.buyYearly()
-    if (selected === 'ONE_TIME') success = await premium.buyLifetime()
-    if (success) router.back()
-  }
+    let success = false;
+    if (selected === "MONTHLY") success = await premium.buyMonthly();
+    if (selected === "YEARLY") success = await premium.buyYearly();
+    if (selected === "ONE_TIME") success = await premium.buyLifetime();
+    if (success) router.back();
+  };
 
   // ── Already premium ──────────────────────────────────────────────────────────
   if (premium.isPremium) {
     return (
-      <Stack flex={1} backgroundColor={Colors.bg}
-        alignItems="center" justifyContent="center" gap={16} padding={32}>
+      <Stack
+        flex={1}
+        backgroundColor={Colors.bg}
+        alignItems="center"
+        justifyContent="center"
+        gap={16}
+        padding={32}
+      >
         <BoltIcon size={48} color={Colors.primary} strokeWidth={1.5} />
         <Text variant="display" color={Colors.textPrimary} textAlign="center">
           You're on Premium
         </Text>
         <Text variant="body" color={Colors.textMuted} textAlign="center">
-          {premium.plan === 'lifetime'
-            ? 'Lifetime access — enjoy all features forever.'
+          {premium.plan === "lifetime"
+            ? "Lifetime access — enjoy all features forever."
             : `Your ${premium.plan} subscription is active.`}
         </Text>
         <StyledPressable
-          marginTop={8} paddingVertical={14} paddingHorizontal={32}
-          borderRadius={30} backgroundColor={Colors.primary}
+          marginTop={8}
+          paddingVertical={14}
+          paddingHorizontal={32}
+          borderRadius={30}
+          backgroundColor={Colors.primary}
           onPress={() => router.back()}
         >
-          <Text variant="button" color="#fff">Back to Kronos</Text>
+          <Text variant="button" color="#fff">
+            Back to Kronos
+          </Text>
         </StyledPressable>
       </Stack>
-    )
+    );
   }
 
   // ── Store unavailable (initialization failed) ────────────────────────────────
   if (premium.purchaseManagerError) {
     return (
-      <Stack flex={1} backgroundColor={Colors.bg}
-        alignItems="center" justifyContent="center" gap={16} padding={32}>
+      <Stack
+        flex={1}
+        backgroundColor={Colors.bg}
+        alignItems="center"
+        justifyContent="center"
+        gap={16}
+        padding={32}
+      >
         <Stack
-          width={52} height={52} borderRadius={26}
-          backgroundColor={Colors.error + '15'}
-          alignItems="center" justifyContent="center"
+          width={52}
+          height={52}
+          borderRadius={26}
+          backgroundColor={Colors.error + "15"}
+          alignItems="center"
+          justifyContent="center"
         >
           <Text variant="header">⚠️</Text>
         </Stack>
@@ -84,46 +112,66 @@ export default function PremiumScreen() {
           The App Store is temporarily unavailable. Please try again shortly.
         </Text>
         <StyledPressable
-          marginTop={16} paddingVertical={14} paddingHorizontal={32}
-          borderRadius={30} backgroundColor={Colors.primary}
+          marginTop={16}
+          paddingVertical={14}
+          paddingHorizontal={32}
+          borderRadius={30}
+          backgroundColor={Colors.primary}
           onPress={() => router.back()}
         >
-          <Text variant="button" color="#fff">Back to Kronos</Text>
+          <Text variant="button" color="#fff">
+            Back to Kronos
+          </Text>
         </StyledPressable>
       </Stack>
-    )
+    );
   }
 
   return (
     <Stack flex={1} backgroundColor={Colors.bg}>
-
       {/* Close button */}
-      <Stack paddingVertical={16} paddingHorizontal={24}  zIndex={10} alignItems='flex-end' justifyContent='flex-end' >
+      <Stack
+        paddingVertical={16}
+        paddingHorizontal={24}
+        zIndex={10}
+        alignItems="flex-end"
+        justifyContent="flex-end"
+      >
         <StyledPressable
-          width={48} height={48} borderRadius={999}
+          width={48}
+          height={48}
+          borderRadius={999}
           backgroundColor={Colors.bgMuted}
-          alignItems="center" justifyContent="center"
+          alignItems="center"
+          justifyContent="center"
           onPress={() => router.back()}
         >
           <Text variant="button">✕</Text>
         </StyledPressable>
       </Stack>
 
-      <ScrollView showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}>
-
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 40 }}
+      >
         {/* ── Hero ──────────────────────────────────────────────────── */}
-        <Stack alignItems="center" paddingHorizontal={24}
-          paddingBottom={20}>
+        <Stack alignItems="center" paddingHorizontal={24} paddingBottom={20}>
           <Stack horizontal alignItems="center" gap={10} marginBottom={6}>
             <Stack
-              width={40} height={40} borderRadius={20}
-              backgroundColor={Colors.primary + '18'}
-              alignItems="center" justifyContent="center"
+              width={40}
+              height={40}
+              borderRadius={20}
+              backgroundColor={Colors.primary + "18"}
+              alignItems="center"
+              justifyContent="center"
             >
               <BoltIcon size={20} color={Colors.primary} strokeWidth={2} />
             </Stack>
-            <Text variant="header" color={Colors.textPrimary} letterSpacing={-0.5}>
+            <Text
+              variant="header"
+              color={Colors.textPrimary}
+              letterSpacing={-0.5}
+            >
               Kronos Premium
             </Text>
           </Stack>
@@ -134,14 +182,23 @@ export default function PremiumScreen() {
 
         {/* ── Feature list ──────────────────────────────────────────── */}
         <StyledCard
-          marginHorizontal={20} marginBottom={20}
-          borderRadius={20} backgroundColor={Colors.bgCard}
-          borderWidth={1} borderColor={Colors.border}
-          paddingVertical={12} paddingHorizontal={16}
+          marginHorizontal={20}
+          marginBottom={20}
+          borderRadius={20}
+          backgroundColor={Colors.bgCard}
+          borderWidth={1}
+          borderColor={Colors.border}
+          paddingVertical={12}
+          paddingHorizontal={16}
         >
           {PREMIUM_FEATURES.map((f, i) => (
             <Stack key={i}>
-              <Stack horizontal alignItems="center" gap={12} paddingVertical={10}>
+              <Stack
+                horizontal
+                alignItems="center"
+                gap={12}
+                paddingVertical={10}
+              >
                 <FeatureIconCircle index={i} colors={Colors} />
                 <Stack flex={1} gap={1}>
                   <Text variant="subtitle" color={Colors.textPrimary}>
@@ -151,10 +208,16 @@ export default function PremiumScreen() {
                     {f.description}
                   </Text>
                 </Stack>
-                <Text variant="button" color={Colors.primary}>✓</Text>
+                <Text variant="button" color={Colors.primary}>
+                  ✓
+                </Text>
               </Stack>
               {i < PREMIUM_FEATURES.length - 1 && (
-                <Stack height={1} backgroundColor={Colors.border} marginLeft={52} />
+                <Stack
+                  height={1}
+                  backgroundColor={Colors.border}
+                  marginLeft={52}
+                />
               )}
             </Stack>
           ))}
@@ -166,69 +229,91 @@ export default function PremiumScreen() {
             CHOOSE YOUR PLAN
           </Text>
 
-          {(['YEARLY', 'ONE_TIME', 'MONTHLY'] as PlanKey[]).map(key => {
-            const p           = PREMIUM_PRICING[key]
-            const active      = selected === key
-            const isBestValue = key === 'ONE_TIME'
+          {(["YEARLY", "ONE_TIME", "MONTHLY"] as PlanKey[]).map((key) => {
+            const p = PREMIUM_PRICING[key];
+            const active = selected === key;
+            const isBestValue = key === "ONE_TIME";
 
             return (
               <StyledPressable
                 key={key}
                 onPress={() => setSelected(key)}
-                borderRadius={16} borderWidth={2}
+                borderRadius={16}
+                borderWidth={2}
                 borderColor={active ? Colors.primary : Colors.border}
-                backgroundColor={active ? Colors.primary + '10' : Colors.bgCard}
-                paddingVertical={14} paddingHorizontal={16}
+                backgroundColor={active ? Colors.primary + "10" : Colors.bgCard}
+                paddingVertical={14}
+                paddingHorizontal={16}
               >
                 <Stack horizontal alignItems="center" gap={12}>
-
                   {/* Radio dot */}
                   <Stack
-                    width={22} height={22} borderRadius={11}
+                    width={22}
+                    height={22}
+                    borderRadius={11}
                     borderWidth={2}
                     borderColor={active ? Colors.primary : Colors.textMuted}
-                    alignItems="center" justifyContent="center"
+                    alignItems="center"
+                    justifyContent="center"
                     flexShrink={0}
                   >
                     {active && (
-                      <Stack width={11} height={11} borderRadius={6} backgroundColor={Colors.primary} />
+                      <Stack
+                        width={11}
+                        height={11}
+                        borderRadius={6}
+                        backgroundColor={Colors.primary}
+                      />
                     )}
                   </Stack>
 
                   {/* Label + badges */}
                   <Stack flex={1} gap={2}>
-                    <Stack horizontal alignItems="center" gap={6} flexWrap="wrap">
+                    <Stack
+                      horizontal
+                      alignItems="center"
+                      gap={6}
+                      flexWrap="wrap"
+                    >
                       <Text variant="subtitle" color={Colors.textPrimary}>
                         {p.label}
                       </Text>
-                      {'saving' in p && (
-                        <Stack paddingHorizontal={7} paddingVertical={2}
-                          borderRadius={6} backgroundColor={Colors.primary}>
+                      {"saving" in p && (
+                        <Stack
+                          paddingHorizontal={7}
+                          paddingVertical={2}
+                          borderRadius={6}
+                          backgroundColor={Colors.primary}
+                        >
                           <Text variant="caption" color="#fff">
                             {(p as any).saving}
                           </Text>
                         </Stack>
                       )}
                       {isBestValue && (
-                        <Stack paddingHorizontal={7} paddingVertical={2}
-                          borderRadius={6} backgroundColor={Colors.warning}>
+                        <Stack
+                          paddingHorizontal={7}
+                          paddingVertical={2}
+                          borderRadius={6}
+                          backgroundColor={Colors.warning}
+                        >
                           <Text variant="caption" color="#fff">
                             BEST VALUE
                           </Text>
                         </Stack>
                       )}
                     </Stack>
-                    {'trial' in p && (
+                    {"trial" in p && (
                       <Text variant="subLabel" color={Colors.primary}>
                         {(p as any).trial}
                       </Text>
                     )}
-                    {key === 'ONE_TIME' && (
+                    {key === "ONE_TIME" && (
                       <Text variant="bodySmall" color={Colors.textMuted}>
                         Pay once, use forever
                       </Text>
                     )}
-                    {key === 'MONTHLY' && (
+                    {key === "MONTHLY" && (
                       <Text variant="bodySmall" color={Colors.textMuted}>
                         Billed monthly, cancel anytime
                       </Text>
@@ -237,67 +322,128 @@ export default function PremiumScreen() {
 
                   {/* Price */}
                   <Stack alignItems="flex-end" gap={1} flexShrink={0}>
-                    <Text variant="metric"
-                      color={active ? Colors.primary : Colors.textPrimary}>
+                    <Text
+                      variant="metric"
+                      color={active ? Colors.primary : Colors.textPrimary}
+                    >
                       {p.price}
                     </Text>
                     <Text variant="caption" color={Colors.textMuted}>
                       {p.period}
                     </Text>
                   </Stack>
-
                 </Stack>
               </StyledPressable>
-            )
+            );
           })}
         </Stack>
 
         {/* ── CTA ───────────────────────────────────────────────────── */}
         <Stack paddingHorizontal={20} gap={12}>
           <StyledPressable
-            paddingVertical={18} borderRadius={30}
-            backgroundColor={premium.purchaseManagerLoading ? Colors.textMuted : Colors.primary}
-            alignItems="center" justifyContent="center"
+            paddingVertical={18}
+            borderRadius={30}
+            backgroundColor={
+              premium.purchaseManagerLoading ? Colors.textMuted : Colors.primary
+            }
+            alignItems="center"
+            justifyContent="center"
             onPress={handlePurchasePress}
-            disabled={premium.purchaseManagerLoading || !premium.purchaseManagerReady}
+            disabled={
+              premium.purchaseManagerLoading || !premium.purchaseManagerReady
+            }
             style={{
-              shadowColor:   Colors.primary,
-              shadowOffset:  { width: 0, height: 6 },
+              shadowColor: Colors.primary,
+              shadowOffset: { width: 0, height: 6 },
               shadowOpacity: 0.35,
-              shadowRadius:  12,
-              elevation:     6,
-              opacity: premium.purchaseManagerLoading || !premium.purchaseManagerReady ? 0.6 : 1,
+              shadowRadius: 12,
+              elevation: 6,
+              opacity:
+                premium.purchaseManagerLoading || !premium.purchaseManagerReady
+                  ? 0.6
+                  : 1,
             }}
           >
             {premium.purchaseManagerLoading ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
               <Text variant="button" color="#fff">
-                {selected === 'YEARLY'   ? '🎉 Start 7-Day Free Trial' :
-                 selected === 'ONE_TIME' ? '⚡ Buy Lifetime Access'    :
-                 '🚀 Start Monthly Plan'}
+                {selected === "YEARLY"
+                  ? "🎉 Start 7-Day Free Trial"
+                  : selected === "ONE_TIME"
+                    ? "⚡ Buy Lifetime Access"
+                    : "🚀 Start Monthly Plan"}
               </Text>
             )}
           </StyledPressable>
 
           <Stack alignItems="center" gap={6}>
-            <StyledPressable 
+            <StyledPressable
               onPress={premium.restore}
-              disabled={premium.purchaseManagerLoading || !premium.purchaseManagerReady}
+              disabled={
+                premium.purchaseManagerLoading || !premium.purchaseManagerReady
+              }
             >
-              <Text variant="subLabel" color={premium.purchaseManagerLoading || !premium.purchaseManagerReady ? Colors.textMuted : Colors.primary}>
+              <Text
+                variant="subLabel"
+                color={
+                  premium.purchaseManagerLoading ||
+                  !premium.purchaseManagerReady
+                    ? Colors.textMuted
+                    : Colors.primary
+                }
+              >
                 Restore purchases
               </Text>
             </StyledPressable>
-            <Text variant="caption" color={Colors.textMuted} textAlign="center" lineHeight={16}>
-              Subscriptions renew automatically. Cancel anytime.{'\n'}
+            <Text
+              variant="caption"
+              color={Colors.textMuted}
+              textAlign="center"
+              lineHeight={16}
+            >
+              Subscriptions renew automatically. Cancel anytime.{"\n"}
               Payment charged to your Apple ID at confirmation.
             </Text>
+
+            <Stack
+              horizontal
+              alignItems="center"
+              justifyContent="center"
+              gap={8}
+              flexWrap="wrap"
+            >
+              <StyledPressable
+                onPress={() =>
+                  Linking.openURL(
+                    "https://suftnetrepo.github.io/kronos/privacy-policy.html",
+                  )
+                }
+              >
+                <Text variant="caption" color={Colors.primary}>
+                  Privacy Policy
+                </Text>
+              </StyledPressable>
+
+              <Text variant="caption" color={Colors.textMuted}>
+                •
+              </Text>
+
+              <StyledPressable
+                onPress={() =>
+                  Linking.openURL(
+                    "https://www.apple.com/legal/internet-services/itunes/dev/stdeula/",
+                  )
+                }
+              >
+                <Text variant="caption" color={Colors.primary}>
+                  Terms of Use
+                </Text>
+              </StyledPressable>
+            </Stack>
           </Stack>
         </Stack>
-
       </ScrollView>
-
     </Stack>
-  )
+  );
 }
