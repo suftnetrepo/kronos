@@ -337,7 +337,6 @@ export default function PremiumScreen() {
             );
           })}
         </Stack>
-
         {/* ── CTA ───────────────────────────────────────────────────── */}
         <Stack paddingHorizontal={20} gap={12}>
           <StyledPressable
@@ -369,13 +368,49 @@ export default function PremiumScreen() {
             ) : (
               <Text variant="button" color="#fff">
                 {selected === "YEARLY"
-                  ? "🎉 Start 7-Day Free Trial"
+                  ? "Start Free Trial"
                   : selected === "ONE_TIME"
-                    ? "⚡ Buy Lifetime Access"
-                    : "🚀 Start Monthly Plan"}
+                    ? "Buy Lifetime Access"
+                    : "Start Monthly Plan"}
               </Text>
             )}
           </StyledPressable>
+
+          {selected === "YEARLY" && (
+            <Text
+              variant="subLabel"
+              color={Colors.textMuted}
+              textAlign="center"
+              lineHeight={18}
+            >
+              7-day free trial, then £5.99/year.{"\n"}
+              Subscription automatically renews unless cancelled at least 24
+              hours before the end of the trial.
+            </Text>
+          )}
+
+          {selected === "MONTHLY" && (
+            <Text
+              variant="subLabel"
+              color={Colors.textMuted}
+              textAlign="center"
+              lineHeight={18}
+            >
+              £1.99/month. Subscription automatically renews unless cancelled at
+              least 24 hours before renewal.
+            </Text>
+          )}
+
+          {selected === "ONE_TIME" && (
+            <Text
+              variant="subLabel"
+              color={Colors.textMuted}
+              textAlign="center"
+              lineHeight={18}
+            >
+              One-time purchase. Lifetime access to premium features.
+            </Text>
+          )}
 
           <Stack alignItems="center" gap={6}>
             <StyledPressable
@@ -396,13 +431,13 @@ export default function PremiumScreen() {
                 Restore purchases
               </Text>
             </StyledPressable>
+
             <Text
-              variant="caption"
+              variant="subLabel"
               color={Colors.textMuted}
               textAlign="center"
               lineHeight={16}
             >
-              Subscriptions renew automatically. Cancel anytime.{"\n"}
               Payment charged to your Apple ID at confirmation.
             </Text>
 
@@ -420,12 +455,12 @@ export default function PremiumScreen() {
                   )
                 }
               >
-                <Text variant="caption" color={Colors.primary}>
+                <Text variant="subLabel" color={Colors.primary}>
                   Privacy Policy
                 </Text>
               </StyledPressable>
 
-              <Text variant="caption" color={Colors.textMuted}>
+              <Text variant="subLabel" color={Colors.textMuted}>
                 •
               </Text>
 
@@ -436,7 +471,7 @@ export default function PremiumScreen() {
                   )
                 }
               >
-                <Text variant="caption" color={Colors.primary}>
+                <Text variant="subLabel" color={Colors.primary}>
                   Terms of Use
                 </Text>
               </StyledPressable>

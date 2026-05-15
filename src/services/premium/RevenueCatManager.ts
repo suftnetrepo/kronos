@@ -24,9 +24,12 @@
  * See: https://docs.revenuecat.com/docs/configuring-products
  */
 import * as SecureStore from 'expo-secure-store'
+import Constants, { ExecutionEnvironment } from 'expo-constants'
 import type { IPurchaseManager, EntitlementInfo, PremiumPlan } from './IPurchaseManager'
 import { PREMIUM_STORAGE_KEY } from '../../constants/premium'
 
+const isExpoGo =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient
 // Import RevenueCat SDK
 let Purchases: any = null
 async function importPurchases() {
@@ -49,7 +52,10 @@ const KRONOS_PRODUCT_IDS = {
 // Entitlement identifier: "premium"
 // Offering identifier: "default"
 // API Keys: Test Store (dev) → Production (app store submission)
-const REVENUECAT_API_KEY = 'appl_IAsJlKwTlgGIqbleOBLmAyRoJQj'
+const REVENUECAT_API_KEY =
+  isExpoGo
+    ? 'test_OiqxogdQQQsphMbZeRymGfZeery'
+    : 'appl_IAsJlKwTlgGIqbleOBLmAyRoJQj'
 
 // ─── State ────────────────────────────────────────────────────────────────
 
