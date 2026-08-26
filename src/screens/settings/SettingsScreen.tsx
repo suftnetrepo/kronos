@@ -21,7 +21,7 @@ import {
   loaderService,
   actionSheetService,
 } from "fluent-styles";
-import { Text, ScreenHeader } from "../../components";
+import { Text } from "../../components";
 import { useColors, THEMES, TAB_ROUTES, type TabName } from "../../constants";
 import { THEME_META } from "../../constants/themes";
 import { THEME_ICONS } from "../../constants/icons";
@@ -246,13 +246,16 @@ export default function SettingsScreen() {
   }, [premium, themeKey, setTheme]);
 
   return (
-    <StyledPage flex={1} backgroundColor={Colors.bg}>
-      <Stack paddingHorizontal={20} paddingTop={20}>
-        <Stack marginTop={10}>
-          <ScreenHeader onBack={() => router.back()} title="Settings" centered />
-        </Stack>
+    <StyledPage showStatusBar    statusBarStyle={"dark-content"} backgroundColor={Colors.bg}>
+      <StyledPage.Header.Full>
+           {/* Settings is a root tab — no back button, matching Today/Tasks/Exams. */}
+      <Stack paddingHorizontal={16} paddingBottom={4}>
+        <Text variant="display" fontSize={29} lineHeight={36} color={Colors.textPrimary}>Settings</Text>
+        <Text variant="bodySmall" color={Colors.textSecondary} marginTop={2}>Appearance, notifications, backup and security.</Text>
       </Stack>
 
+        </StyledPage.Header.Full>
+   
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* ── Premium banner / badge ────────────────────────────────── */}
         {!premium.isPremium ? (
@@ -503,88 +506,40 @@ export default function SettingsScreen() {
             </Stack>
           </Stack>
 
-          {/* Today option — stored as 'index', the tab route Today lives on */}
-          <StyledPressable
-            flexDirection="row"
-            alignItems="center"
-            gap={14}
-            paddingHorizontal={20}
-            paddingVertical={14}
-            onPress={async () => {
-              await appSettings.setDefaultTab('index')
-              router.replace(TAB_ROUTES.index)
-            }}
-            backgroundColor={appSettings.defaultTab === 'index' ? Colors.primary + '15' : 'transparent'}
-          >
-            <Stack flex={1} gap={2}>
-              <Text
-                variant="subtitle"
-                color={appSettings.defaultTab === 'index' ? Colors.primary : Colors.textPrimary}
+          {/* Today/Timetable/Calendar — the three panes of the Home hub */}
+          {([
+            ['today', 'Today'],
+            ['timetable', 'Timetable'],
+            ['calendar', 'Calendar'],
+          ] as const).map(([key, label], i) => (
+            <React.Fragment key={key}>
+              {i > 0 && <StyledDivider height={0.3} borderBottomColor={Colors.border} />}
+              <StyledPressable
+                flexDirection="row"
+                alignItems="center"
+                gap={14}
+                paddingHorizontal={20}
+                paddingVertical={14}
+                onPress={async () => {
+                  await appSettings.setDefaultTab(key)
+                  router.replace(TAB_ROUTES.index)
+                }}
+                backgroundColor={appSettings.defaultTab === key ? Colors.primary + '15' : 'transparent'}
               >
-                Today
-              </Text>
-            </Stack>
-            {appSettings.defaultTab === 'index' && (
-              <Checkmark size={18} color={Colors.primary} strokeWidth={2} />
-            )}
-          </StyledPressable>
-
-          <StyledDivider height={0.3} borderBottomColor={Colors.border} />
-
-          {/* Homework option — opens Tasks pre-filtered to Homework, since
-              the legacy Homework tab no longer creates reachable records */}
-          <StyledPressable
-            flexDirection="row"
-            alignItems="center"
-            gap={14}
-            paddingHorizontal={20}
-            paddingVertical={14}
-            onPress={async () => {
-              await appSettings.setDefaultTab('homework')
-              router.replace({ pathname: TAB_ROUTES.tasks, params: { type: 'homework' } } as any)
-            }}
-            backgroundColor={appSettings.defaultTab === 'homework' ? Colors.primary + '15' : 'transparent'}
-          >
-            <Stack flex={1} gap={2}>
-              <Text
-                variant="subtitle"
-                color={appSettings.defaultTab === 'homework' ? Colors.primary : Colors.textPrimary}
-              >
-                Homework
-              </Text>
-            </Stack>
-            {appSettings.defaultTab === 'homework' && (
-              <Checkmark size={18} color={Colors.primary} strokeWidth={2} />
-            )}
-          </StyledPressable>
-
-          <StyledDivider height={0.3} borderBottomColor={Colors.border} />
-
-          {/* Exams option */}
-          <StyledPressable
-            flexDirection="row"
-            alignItems="center"
-            gap={14}
-            paddingHorizontal={20}
-            paddingVertical={14}
-            onPress={async () => {
-              await appSettings.setDefaultTab('exams')
-              router.replace(TAB_ROUTES.exams)
-            }}
-            backgroundColor={appSettings.defaultTab === 'exams' ? Colors.primary + '15' : 'transparent'}
-          >
-            <Stack flex={1} gap={2}>
-              <Text
-                variant="subtitle"
-                color={appSettings.defaultTab === 'exams' ? Colors.primary : Colors.textPrimary}
-              >
-                Exams
-              </Text>
-            </Stack>
-            {appSettings.defaultTab === 'exams' && (
-              <Checkmark size={18} color={Colors.primary} strokeWidth={2} />
-            )}
-          </StyledPressable>
+                <Stack flex={1} gap={2}>
+                  <Text
+                    variant="subtitle"
+                    color={appSettings.defaultTab === key ? Colors.primary : Colors.textPrimary}
+                  >
+                    {label}
+                  </Text>
+                </Stack>
+                {appSettings.defaultTab === key && (
+                  <Checkmark size={18} color={Colors.primary} strokeWidth={2} />
+                )}
+              </StyledPressable>
+            </React.Fragment>
+          ))}
         </StyledCard>
 
         {/* ── Timetable ─────────────────────────────────────────────── */}
@@ -783,7 +738,7 @@ export default function SettingsScreen() {
               Kronos
             </Text>
             <Text variant="body" color={Colors.textMuted}>
-              v1.0.0
+              v1.0.1
             </Text>
           </Stack>
           <StyledDivider height={0.3} borderBottomColor={Colors.border} />

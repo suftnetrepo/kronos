@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useSettingsStore } from '../stores/settings.store'
+import type { DefaultTab } from '../services/settings.service'
 
 /**
  * Custom hook to access and update app settings
@@ -35,7 +36,7 @@ export const useSettings = () => {
   )
 
   const updateDefaultTab = useCallback(
-    (tab: 'index' | 'homework' | 'exams') => setDefaultTab(tab),
+    (tab: DefaultTab) => setDefaultTab(tab),
     [setDefaultTab]
   )
 

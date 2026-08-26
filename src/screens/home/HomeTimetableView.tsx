@@ -2,11 +2,12 @@ import React, { useEffect, useRef, useState } from 'react'
 import { ScrollView } from 'react-native'
 import { Stack, StyledPressable, dialogueService, toastService } from 'fluent-styles'
 import { router } from 'expo-router'
-import { Text, PremiumIcon, SwipeDeleteAction } from '../../components'
+import { Text, PremiumIcon } from '../../components'
 import { useColors } from '../../constants'
 import { useSubjects } from '../../hooks/useSubjects'
 import { useAppStore } from '../../stores'
 import { DAYS, DAY_LABELS, DAY_FULL, type Day, type Subject } from '../../db/schema'
+import { SubjectCard } from './HomeScreen'
 
 // The embedded "Timetable" pane of the Home planning hub. This intentionally
 // reuses the *original* day-by-day timetable data model (useAppStore's
@@ -72,27 +73,14 @@ export default function HomeTimetableView() {
 
       <Stack paddingHorizontal={20} marginTop={16}>
         {sorted.length ? sorted.map(s => (
-          <Stack key={s.id} marginBottom={9}>
-            <SwipeDeleteAction
-              itemId={s.id} isOpen={openSwipeId === s.id}
-              onOpenChange={open => setOpenSwipeId(open ? s.id : null)}
-              onDelete={() => handleDelete(s)} destructiveColor={C.error}
-            >
-              <StyledPressable onPress={() => router.push({ pathname: '/subject/[id]', params: { id: s.id } } as any)}>
-                <Stack flexDirection="row" alignItems="center" padding={14} borderRadius={16} backgroundColor={C.bgCard} borderWidth={1} borderColor={C.border}>
-                  <Text variant="caption" fontWeight="700" color={C.textSecondary} width={44}>{s.startTime}</Text>
-                  <Stack width={7} height={7} borderRadius={4} backgroundColor={s.color} marginRight={11} />
-                  <Stack flex={1} marginRight={8}>
-                    <Text variant="label" color={C.textPrimary} numberOfLines={1}>{s.name}</Text>
-                    <Text variant="caption" color={C.textSecondary} numberOfLines={1}>
-                      {s.room ? `Room ${s.room} · ` : ''}{s.startTime} – {s.endTime}
-                    </Text>
-                  </Stack>
-                  <PremiumIcon name="chevron" size={15} color={C.textMuted} />
-                </Stack>
-              </StyledPressable>
-            </SwipeDeleteAction>
-          </Stack>
+          <SubjectCard
+            key={s.id}
+            subject={s}
+            onEdit={subject => router.push({ pathname: '/subject/[id]', params: { id: subject.id } } as any)}
+            onDelete={handleDelete}
+            openSwipeId={openSwipeId}
+            onSwipeOpen={setOpenSwipeId}
+          />
         )) : (
           <Stack paddingVertical={34} paddingHorizontal={24} backgroundColor={C.bgCard} borderRadius={18} borderWidth={1} borderColor={C.border} alignItems="center">
             <Stack width={46} height={46} borderRadius={16} backgroundColor={C.primary + '10'} alignItems="center" justifyContent="center" marginBottom={12}>

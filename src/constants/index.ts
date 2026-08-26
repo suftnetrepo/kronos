@@ -23,7 +23,6 @@ export const TAB_ROUTES = {
   index: '/',
   tasks: '/tasks',
   exams: '/exams',
-  more: '/more',
   homework: '/homework',
   settings: '/settings',
 } as const

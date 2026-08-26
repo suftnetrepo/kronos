@@ -39,8 +39,9 @@ const formatDateTime = (d: Date) =>
     minute: "2-digit",
   });
 
-// ── Small building blocks shared by the info card's two rows ───────────────
-function IconTile({ icon, color }: { icon: PremiumIconName; color: string }) {
+// ── Small building block for the info card's rows — exported so
+// ExamDetailScreen's info card can reuse the exact same tile. ─────────────
+export function IconTile({ icon, color }: { icon: PremiumIconName; color: string }) {
   return (
     <Stack
       width={34}

@@ -30,7 +30,9 @@ import { ShareTimetableContent } from "../timetable/ShareTimetableContent";
 import { ImportTimetableContent } from "../timetable/ImportTimetableContent";
 
 // ─── Subject card — timeline row ──────────────────────────────────────────────
-function SubjectCard({
+// Exported so the Home planning hub's embedded Timetable pane
+// (HomeTimetableView) can reuse the exact same component.
+export function SubjectCard({
   subject,
   onEdit,
   onDelete,

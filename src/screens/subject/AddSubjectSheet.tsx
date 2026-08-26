@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { ScrollView, Modal } from "react-native";
+import { ScrollView } from "react-native";
 import { router } from "expo-router";
 import {
   Stack,
@@ -8,6 +8,7 @@ import {
   StyledDivider,
   Switch,
   StyledForm,
+  Popup,
 } from "fluent-styles";
 import { toastService, loaderService } from "fluent-styles";
 import { Text } from "../../components/text";
@@ -57,7 +58,6 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
   const [reminderOn, setReminderOn] = useState(false);
   const [showStart, setShowStart] = useState(false);
   const [showEnd, setShowEnd] = useState(false);
-  const [showReminder, setShowReminder] = useState(false);
   const [touched, setTouched] = useState({ name: false });
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
@@ -177,332 +177,311 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
   ]);
 
   return (
-    <Modal
+    <Popup
       visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
+      onClose={() => { reset(); onClose(); }}
+      overlayColor="rgba(0,0,0,0.45)"
+      roundRadius={28}
+      colors={{ background: Colors.bgCard, handle: Colors.border }}
+      style={{ maxHeight: "92%" }}
     >
-      <Stack
-        flex={1}
-        backgroundColor="rgba(0,0,0,0.45)"
-        justifyContent="flex-end"
+      {/* Header */}
+      <ModalFormHeader
+        title="Add Subject"
+        onCancel={() => { reset(); onClose(); }}
+        onSave={handleSave}
+        saveDisabled={!isValid}
+      />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
       >
-        <Stack
-          backgroundColor={Colors.bgCard}
-          borderTopLeftRadius={28}
-          borderTopRightRadius={28}
-          maxHeight="92%"
-        >
-          {/* Handle */}
-          <Stack alignItems="center" paddingTop={12} paddingBottom={4}>
-            <Stack
-              width={40}
-              height={4}
-              borderRadius={2}
-              backgroundColor={Colors.border}
-            />
-          </Stack>
-
-          {/* Header */}
-          <ModalFormHeader
-            title="Add Subject"
-            onCancel={() => { reset(); onClose(); }}
-            onSave={handleSave}
-            saveDisabled={!isValid}
+        {/* Subject name */}
+        <Stack gap={6} marginBottom={16}>
+          <Text variant="overline" color={Colors.textMuted}>
+            SUBJECT NAME *
+          </Text>
+          <StyledTextInput
+            variant="filled"
+            placeholder="e.g. Mathematics"
+            value={name}
+            onChangeText={(value) => {
+              setName(value);
+              if (!touched.name) setTouched((s) => ({ ...s, name: true }));
+            }}
+            fontSize={15}
+            borderRadius={12}
+            autoFocus
           />
+          {nameError ? (
+            <Text variant="caption" color={Colors.error}>
+              {nameError}
+            </Text>
+          ) : null}
+        </Stack>
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
-          >
-            {/* Subject name */}
-            <Stack gap={6} marginBottom={16}>
+        <StyledForm>
+          {/* Teacher + Room row */}
+          <Stack flexDirection="row" gap={12} marginBottom={16}>
+            <Stack flex={1} gap={6}>
               <Text variant="overline" color={Colors.textMuted}>
-                SUBJECT NAME *
+                TEACHER
               </Text>
               <StyledTextInput
                 variant="filled"
-                placeholder="e.g. Mathematics"
-                value={name}
-                onChangeText={(value) => {
-                  setName(value);
-                  if (!touched.name) setTouched((s) => ({ ...s, name: true }));
-                }}
-                fontSize={15}
+                placeholder="Optional"
+                value={teacher}
+                onChangeText={setTeacher}
+                fontSize={14}
                 borderRadius={12}
-                autoFocus
               />
-              {nameError ? (
-                <Text variant="caption" color={Colors.error}>
-                  {nameError}
-                </Text>
-              ) : null}
             </Stack>
+            <Stack flex={1} gap={6}>
+              <Text variant="overline" color={Colors.textMuted}>
+                ROOM
+              </Text>
+              <StyledTextInput
+                variant="filled"
+                placeholder="Optional"
+                value={room}
+                onChangeText={setRoom}
+                fontSize={14}
+                borderRadius={12}
+              />
+            </Stack>
+          </Stack>
 
-            <StyledForm>
-              {/* Teacher + Room row */}
-              <Stack flexDirection="row" gap={12} marginBottom={16}>
-                <Stack flex={1} gap={6}>
-                  <Text variant="overline" color={Colors.textMuted}>
-                    TEACHER
-                  </Text>
-                  <StyledTextInput
-                    variant="filled"
-                    placeholder="Optional"
-                    value={teacher}
-                    onChangeText={setTeacher}
-                    fontSize={14}
+          {/* Days selector */}
+          <Stack gap={8} marginBottom={16}>
+            <Text variant="overline" color={Colors.textMuted}>
+              REPEAT ON *
+            </Text>
+            <Stack flexDirection="row" gap={8} flexWrap="wrap">
+              {DAYS.map((day) => {
+                const active = selectedDays.includes(day);
+                return (
+                  <StyledPressable
+                    key={day}
+                    paddingHorizontal={14}
+                    paddingVertical={9}
                     borderRadius={12}
-                  />
-                </Stack>
-                <Stack flex={1} gap={6}>
-                  <Text variant="overline" color={Colors.textMuted}>
-                    ROOM
-                  </Text>
-                  <StyledTextInput
-                    variant="filled"
-                    placeholder="Optional"
-                    value={room}
-                    onChangeText={setRoom}
-                    fontSize={14}
-                    borderRadius={12}
-                  />
-                </Stack>
-              </Stack>
+                    borderWidth={2}
+                    borderColor={active ? color : Colors.border}
+                    backgroundColor={active ? color + "20" : Colors.bgCard}
+                    onPress={() => toggleDay(day)}
+                  >
+                    <Text
+                      variant="button"
+                      fontSize={13}
+                      color={active ? color : Colors.textMuted}
+                    >
+                      {DAY_LABELS[day]}
+                    </Text>
+                  </StyledPressable>
+                );
+              })}
+            </Stack>
+            {daysError ? (
+              <Text variant="caption" color={Colors.error}>
+                {daysError}
+              </Text>
+            ) : null}
+          </Stack>
 
-              {/* Days selector */}
-              <Stack gap={8} marginBottom={16}>
-                <Text variant="overline" color={Colors.textMuted}>
-                  REPEAT ON *
+          {/* Time row */}
+          <Stack gap={8} marginBottom={16}>
+            <Text variant="overline" color={Colors.textMuted}>
+              TIME *
+            </Text>
+            <Stack flexDirection="row" gap={12}>
+              {/* Start time */}
+              <StyledPressable
+                flex={1}
+                flexDirection="row"
+                alignItems="center"
+                justifyContent="space-between"
+                paddingHorizontal={14}
+                paddingVertical={14}
+                borderRadius={12}
+                backgroundColor={Colors.bgInput}
+                onPress={() => setShowStart(true)}
+              >
+                <Text variant="label" color={Colors.textMuted}>
+                  From
                 </Text>
-                <Stack flexDirection="row" gap={8} flexWrap="wrap">
-                  {DAYS.map((day) => {
-                    const active = selectedDays.includes(day);
+                <Text variant="title" color={Colors.textPrimary}>
+                  {startTime}
+                </Text>
+              </StyledPressable>
+              {/* End time */}
+              <StyledPressable
+                flex={1}
+                flexDirection="row"
+                alignItems="center"
+                justifyContent="space-between"
+                paddingHorizontal={14}
+                paddingVertical={14}
+                borderRadius={12}
+                backgroundColor={Colors.bgInput}
+                onPress={() => setShowEnd(true)}
+              >
+                <Text variant="label" color={Colors.textMuted}>
+                  To
+                </Text>
+                <Text variant="title" color={Colors.textPrimary}>
+                  {endTime}
+                </Text>
+              </StyledPressable>
+            </Stack>
+            {timeError ? (
+              <Text variant="caption" color={Colors.error}>
+                {timeError}
+              </Text>
+            ) : null}
+          </Stack>
+
+          {/* Colour picker */}
+          <Stack gap={8} marginBottom={16}>
+            <Text variant="overline" color={Colors.textMuted}>
+              COLOUR
+            </Text>
+            <Stack flexDirection="row" flexWrap="wrap" gap={10}>
+              {SUBJECT_COLORS.map((c) => (
+                <StyledPressable
+                  key={c}
+                  width={36}
+                  height={36}
+                  borderRadius={18}
+                  backgroundColor={c}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderWidth={color === c ? 3 : 0}
+                  borderColor={Colors.bgCard}
+                  onPress={() => setColor(c)}
+                  style={
+                    color === c
+                      ? {
+                          shadowColor: c,
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.5,
+                          shadowRadius: 6,
+                        }
+                      : undefined
+                  }
+                >
+                  {color === c && (
+                    <Text variant="button" fontSize={16} color="#fff">
+                      ✓
+                    </Text>
+                  )}
+                </StyledPressable>
+              ))}
+            </Stack>
+          </Stack>
+
+          {/* Reminder toggle */}
+          <StyledDivider
+            borderBottomColor={Colors.border}
+            marginBottom={16}
+          />
+          <Stack
+            flexDirection="row"
+            alignItems="center"
+            justifyContent="space-between"
+            marginBottom={reminderOn ? 12 : 0}
+          >
+            <Stack gap={2}>
+              <Text variant="label" color={Colors.textPrimary}>
+                🔔 Class reminder
+              </Text>
+              <Text variant="bodySmall" color={Colors.textMuted}>
+                Get notified before class starts
+              </Text>
+            </Stack>
+            <Switch
+              value={reminderOn}
+              onChange={handleReminderToggle}
+              activeColor={Colors.primary}
+            />
+          </Stack>
+
+          {/* Reminder duration */}
+          {reminderOn && (
+            <Stack gap={8}>
+              <Text variant="overline" color={Colors.textMuted}>
+                NOTIFY ME
+              </Text>
+              <Stack flexDirection="row" flexWrap="wrap" gap={8}>
+                {REMINDER_OPTIONS.filter((o) => o.value !== null).map(
+                  (opt) => {
+                    const active = reminder === opt.value;
                     return (
                       <StyledPressable
-                        key={day}
+                        key={opt.value}
                         paddingHorizontal={14}
                         paddingVertical={9}
                         borderRadius={12}
                         borderWidth={2}
-                        borderColor={active ? color : Colors.border}
-                        backgroundColor={active ? color + "20" : Colors.bgCard}
-                        onPress={() => toggleDay(day)}
+                        borderColor={
+                          active ? Colors.primary : Colors.border
+                        }
+                        backgroundColor={
+                          active ? Colors.primary + "15" : Colors.bgCard
+                        }
+                        onPress={() => setReminder(opt.value as number)}
                       >
                         <Text
                           variant="button"
                           fontSize={13}
-                          color={active ? color : Colors.textMuted}
+                          color={active ? Colors.primary : Colors.textMuted}
                         >
-                          {DAY_LABELS[day]}
+                          {opt.label}
                         </Text>
                       </StyledPressable>
                     );
-                  })}
-                </Stack>
-                {daysError ? (
-                  <Text variant="caption" color={Colors.error}>
-                    {daysError}
-                  </Text>
-                ) : null}
+                  },
+                )}
               </Stack>
+            </Stack>
+          )}
+        </StyledForm>
+      </ScrollView>
 
-              {/* Time row */}
-              <Stack gap={8} marginBottom={16}>
-                <Text variant="overline" color={Colors.textMuted}>
-                  TIME *
-                </Text>
-                <Stack flexDirection="row" gap={12}>
-                  {/* Start time */}
-                  <StyledPressable
-                    flex={1}
-                    flexDirection="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    paddingHorizontal={14}
-                    paddingVertical={14}
-                    borderRadius={12}
-                    backgroundColor={Colors.bgInput}
-                    onPress={() => setShowStart(true)}
-                  >
-                    <Text variant="label" color={Colors.textMuted}>
-                      From
-                    </Text>
-                    <Text variant="title" color={Colors.textPrimary}>
-                      {startTime}
-                    </Text>
-                  </StyledPressable>
-                  {/* End time */}
-                  <StyledPressable
-                    flex={1}
-                    flexDirection="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    paddingHorizontal={14}
-                    paddingVertical={14}
-                    borderRadius={12}
-                    backgroundColor={Colors.bgInput}
-                    onPress={() => setShowEnd(true)}
-                  >
-                    <Text variant="label" color={Colors.textMuted}>
-                      To
-                    </Text>
-                    <Text variant="title" color={Colors.textPrimary}>
-                      {endTime}
-                    </Text>
-                  </StyledPressable>
-                </Stack>
-                {timeError ? (
-                  <Text variant="caption" color={Colors.error}>
-                    {timeError}
-                  </Text>
-                ) : null}
-              </Stack>
-
-              {/* Colour picker */}
-              <Stack gap={8} marginBottom={16}>
-                <Text variant="overline" color={Colors.textMuted}>
-                  COLOUR
-                </Text>
-                <Stack flexDirection="row" flexWrap="wrap" gap={10}>
-                  {SUBJECT_COLORS.map((c) => (
-                    <StyledPressable
-                      key={c}
-                      width={36}
-                      height={36}
-                      borderRadius={18}
-                      backgroundColor={c}
-                      alignItems="center"
-                      justifyContent="center"
-                      borderWidth={color === c ? 3 : 0}
-                      borderColor={Colors.bgCard}
-                      onPress={() => setColor(c)}
-                      style={
-                        color === c
-                          ? {
-                              shadowColor: c,
-                              shadowOffset: { width: 0, height: 2 },
-                              shadowOpacity: 0.5,
-                              shadowRadius: 6,
-                            }
-                          : undefined
-                      }
-                    >
-                      {color === c && (
-                        <Text variant="button" fontSize={16} color="#fff">
-                          ✓
-                        </Text>
-                      )}
-                    </StyledPressable>
-                  ))}
-                </Stack>
-              </Stack>
-
-              {/* Reminder toggle */}
-              <StyledDivider
-                borderBottomColor={Colors.border}
-                marginBottom={16}
-              />
-              <Stack
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-                marginBottom={reminderOn ? 12 : 0}
-              >
-                <Stack gap={2}>
-                  <Text variant="label" color={Colors.textPrimary}>
-                    🔔 Class reminder
-                  </Text>
-                  <Text variant="bodySmall" color={Colors.textMuted}>
-                    Get notified before class starts
-                  </Text>
-                </Stack>
-                <Switch
-                  value={reminderOn}
-                  onChange={handleReminderToggle}
-                  activeColor={Colors.primary}
-                />
-              </Stack>
-
-              {/* Reminder duration */}
-              {reminderOn && (
-                <Stack gap={8}>
-                  <Text variant="overline" color={Colors.textMuted}>
-                    NOTIFY ME
-                  </Text>
-                  <Stack flexDirection="row" flexWrap="wrap" gap={8}>
-                    {REMINDER_OPTIONS.filter((o) => o.value !== null).map(
-                      (opt) => {
-                        const active = reminder === opt.value;
-                        return (
-                          <StyledPressable
-                            key={opt.value}
-                            paddingHorizontal={14}
-                            paddingVertical={9}
-                            borderRadius={12}
-                            borderWidth={2}
-                            borderColor={
-                              active ? Colors.primary : Colors.border
-                            }
-                            backgroundColor={
-                              active ? Colors.primary + "15" : Colors.bgCard
-                            }
-                            onPress={() => setReminder(opt.value as number)}
-                          >
-                            <Text
-                              variant="button"
-                              fontSize={13}
-                              color={active ? Colors.primary : Colors.textMuted}
-                            >
-                              {opt.label}
-                            </Text>
-                          </StyledPressable>
-                        );
-                      },
-                    )}
-                  </Stack>
-                </Stack>
-              )}
-            </StyledForm>
-          </ScrollView>
-        </Stack>
-      </Stack>
-
-      {/* Time picker modals */}
-      {showStart && (
-        <TimePicker
-          value={startTime}
-          onSelect={(t) => {
-            setStartTime(t);
-            setShowStart(false);
-          }}
-          onClose={() => setShowStart(false)}
-          title="Start time"
-        />
-      )}
-      {showEnd && (
-        <TimePicker
-          value={endTime}
-          onSelect={(t) => {
-            setEndTime(t);
-            setShowEnd(false);
-          }}
-          onClose={() => setShowEnd(false)}
-          title="End time"
-        />
-      )}
-    </Modal>
+      {/* Time picker popups */}
+      <TimePicker
+        visible={showStart}
+        value={startTime}
+        onSelect={(t) => {
+          setStartTime(t);
+          setShowStart(false);
+        }}
+        onClose={() => setShowStart(false)}
+        title="Start time"
+      />
+      <TimePicker
+        visible={showEnd}
+        value={endTime}
+        onSelect={(t) => {
+          setEndTime(t);
+          setShowEnd(false);
+        }}
+        onClose={() => setShowEnd(false)}
+        title="End time"
+      />
+    </Popup>
   );
 }
 
 // ─── Simple time picker ───────────────────────────────────────────────────────
 function TimePicker({
+  visible,
   value,
   onSelect,
   onClose,
   title,
 }: {
+  visible: boolean;
   value: string;
   onSelect: (t: string) => void;
   onClose: () => void;
@@ -510,68 +489,62 @@ function TimePicker({
 }) {
   const Colors = useColors();
   return (
-    <Modal visible transparent animationType="slide" onRequestClose={onClose}>
+    <Popup
+      visible={visible}
+      onClose={onClose}
+      overlayColor="rgba(0,0,0,0.5)"
+      roundRadius={24}
+      colors={{ background: Colors.bgCard, handle: Colors.border }}
+      style={{ maxHeight: "60%" }}
+    >
       <Stack
-        flex={1}
-        backgroundColor="rgba(0,0,0,0.5)"
-        justifyContent="flex-end"
+        flexDirection="row"
+        alignItems="center"
+        justifyContent="space-between"
+        paddingHorizontal={20}
+        paddingVertical={14}
+        borderBottomWidth={1}
+        borderBottomColor={Colors.border}
       >
-        <Stack
-          backgroundColor={Colors.bgCard}
-          borderTopLeftRadius={24}
-          borderTopRightRadius={24}
-          maxHeight="60%"
-        >
-          <Stack
+        <StyledPressable onPress={onClose}>
+          <Text variant="button" color={Colors.textMuted}>
+            Cancel
+          </Text>
+        </StyledPressable>
+        <Text variant="title" color={Colors.textPrimary}>
+          {title}
+        </Text>
+        <Stack width={60} />
+      </Stack>
+      <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
+        {TIME_OPTIONS.map((t) => (
+          <StyledPressable
+            key={t}
             flexDirection="row"
             alignItems="center"
             justifyContent="space-between"
             paddingHorizontal={20}
             paddingVertical={14}
-            borderBottomWidth={1}
-            borderBottomColor={Colors.border}
+            backgroundColor={
+              t === value ? Colors.primary + "12" : "transparent"
+            }
+            onPress={() => onSelect(t)}
           >
-            <StyledPressable onPress={onClose}>
-              <Text variant="button" color={Colors.textMuted}>
-                Cancel
-              </Text>
-            </StyledPressable>
-            <Text variant="title" color={Colors.textPrimary}>
-              {title}
+            <Text
+              variant="metric"
+              fontSize={17}
+              color={t === value ? Colors.primary : Colors.textPrimary}
+            >
+              {t}
             </Text>
-            <Stack width={60} />
-          </Stack>
-          <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
-            {TIME_OPTIONS.map((t) => (
-              <StyledPressable
-                key={t}
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-                paddingHorizontal={20}
-                paddingVertical={14}
-                backgroundColor={
-                  t === value ? Colors.primary + "12" : "transparent"
-                }
-                onPress={() => onSelect(t)}
-              >
-                <Text
-                  variant="metric"
-                  fontSize={17}
-                  color={t === value ? Colors.primary : Colors.textPrimary}
-                >
-                  {t}
-                </Text>
-                {t === value && (
-                  <Text variant="button" color={Colors.primary}>
-                    ✓
-                  </Text>
-                )}
-              </StyledPressable>
-            ))}
-          </ScrollView>
-        </Stack>
-      </Stack>
-    </Modal>
+            {t === value && (
+              <Text variant="button" color={Colors.primary}>
+                ✓
+              </Text>
+            )}
+          </StyledPressable>
+        ))}
+      </ScrollView>
+    </Popup>
   );
 }

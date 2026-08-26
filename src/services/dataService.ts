@@ -26,7 +26,7 @@ export const dataService = {
     await db.insert(settings).values({
       id: 'singleton',
       firstDayOfWeek: 'MON',
-      defaultTab: 'index',
+      defaultTab: 'today',
       updatedAt: new Date(),
     })
   },

@@ -9,11 +9,13 @@ import { eq } from 'drizzle-orm'
  * All settings are persisted in the database and hydrated into the settings store on app start.
  */
 
+export type DefaultTab = 'today' | 'timetable' | 'calendar'
+
 export interface AppSettings {
   lockEnabled: boolean
   biometricEnabled: boolean
   remindersEnabled: boolean
-  defaultTab: 'index' | 'homework' | 'exams'
+  defaultTab: DefaultTab
   downloadedExportPath?: string
 }
 
@@ -21,8 +23,15 @@ const DEFAULT_SETTINGS: AppSettings = {
   lockEnabled: false,
   biometricEnabled: false,
   remindersEnabled: true,
-  defaultTab: 'index',
+  defaultTab: 'today',
 }
+
+// Home used to be a single "Today" screen with Homework/Exams as separate
+// tabs ('index' | 'homework' | 'exams'); it's now a Today/Timetable/Calendar
+// hub. Any value stored by an older build — or anything else unrecognized —
+// falls back to 'today' rather than pointing at a pane that no longer exists.
+const normalizeDefaultTab = (value: unknown): DefaultTab =>
+  value === 'timetable' || value === 'calendar' ? value : 'today'
 
 /**
  * Ensure settings singleton exists
@@ -107,7 +116,7 @@ export const getAllSettings = async (): Promise<AppSettings> => {
       lockEnabled: record.lockEnabled ?? DEFAULT_SETTINGS.lockEnabled,
       biometricEnabled: record.biometricEnabled ?? DEFAULT_SETTINGS.biometricEnabled,
       remindersEnabled: record.remindersEnabled ?? DEFAULT_SETTINGS.remindersEnabled,
-      defaultTab: (record.defaultTab as any) ?? DEFAULT_SETTINGS.defaultTab,
+      defaultTab: normalizeDefaultTab(record.defaultTab),
       downloadedExportPath: record.downloadedExportPath ?? undefined,
     } as AppSettings
   } catch (err) {

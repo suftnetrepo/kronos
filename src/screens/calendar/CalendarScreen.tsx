@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react'
 import { ScrollView } from 'react-native'
+import Svg, { Path } from 'react-native-svg'
 import { Stack, StyledPressable, StyledPage } from 'fluent-styles'
 import { router } from 'expo-router'
 import { addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameMonth, isSameDay, format } from 'date-fns'
@@ -10,6 +11,17 @@ import { useTasks } from '../../hooks/useTasks'
 import { useExams } from '../../hooks/useExams'
 
 const DAY = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+
+// Same chevron geometry as ScreenHeader's back arrow, mirrored — a real
+// vector icon (matching PremiumIcon's "chevron" on the other side) rather
+// than a typographic ‹ glyph.
+function ChevronLeft({ size = 20, color }: { size?: number; color: string }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M15 18l-6-6 6-6" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  )
+}
 
 type Props = {
   // When embedded inside the Home planning hub, the hub's own header +
@@ -52,13 +64,13 @@ export default function CalendarScreen({ embedded = false }: Props = {}) {
         </Stack>
       ) : null}
 
-      <Stack flexDirection="row" alignItems="center" justifyContent="space-between" marginTop={embedded ? 4 : 26} marginBottom={16}>
+      <Stack flexDirection="row" marginHorizontal={8} alignItems="center" justifyContent="space-between" marginTop={embedded ? 4 : 26} marginBottom={16}>
         <StyledPressable onPress={() => setMonth(subMonths(month, 1))} hitSlop={8}>
-          <Text fontSize={26} color={C.textSecondary}>‹</Text>
+          <ChevronLeft size={20} color={C.textSecondary} />
         </StyledPressable>
         <Text variant="title" color={C.textPrimary}>{format(month, 'MMMM yyyy')}</Text>
         <StyledPressable onPress={() => setMonth(addMonths(month, 1))} hitSlop={8}>
-          <PremiumIcon name="chevron" size={18} color={C.textSecondary} />
+          <PremiumIcon name="chevron" size={20} color={C.textSecondary} strokeWidth={2.2} />
         </StyledPressable>
       </Stack>
 

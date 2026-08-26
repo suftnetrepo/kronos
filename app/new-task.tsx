@@ -1,6 +1,6 @@
 import React,{useEffect,useMemo,useState} from 'react'
-import {ScrollView,TextInput} from 'react-native'
-import {Stack,StyledPressable,StyledPage,Switch} from 'fluent-styles'
+import {ScrollView,TextInput,Modal} from 'react-native'
+import {Stack,StyledPressable,StyledPage,Switch,StyledDatePicker} from 'fluent-styles'
 import {useRouter,useLocalSearchParams} from 'expo-router'
 import {Text,PremiumIcon,ModalFormHeader} from '../src/components'
 import {BellIcon} from '../src/icons/ui'
@@ -22,19 +22,17 @@ const PRIORITIES=['normal','medium','high'] as const
 const PRIORITY_LABELS:Record<TaskPriority,string>={normal:'Low',medium:'Medium',high:'High'}
 type DueMode='none'|'today'|'tomorrow'|'week'|'custom'
 type ReminderMode='none'|'1h'|'1d'
-const pad=(n:number)=>String(n).padStart(2,'0')
-const dateValue=(d:Date)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`
-const timeValue=(d:Date)=>`${pad(d.getHours())}:${pad(d.getMinutes())}`
-const parseDateTime=(date:string,time:string):Date|null=>{const m=date.match(/^(\d{4})-(\d{2})-(\d{2})$/),t=time.match(/^(\d{2}):(\d{2})$/);if(!m||!t)return null;const d=new Date(+m[1],+m[2]-1,+m[3],+t[1],+t[2],0,0);return Number.isNaN(+d)?null:d}
+const formatCustomDue=(d:Date)=>d.toLocaleString(undefined,{weekday:'short',day:'numeric',month:'short',hour:'numeric',minute:'2-digit'})
 
 export default function NewTask(){
  const C=useColors(),r=useRouter(),params=useLocalSearchParams<{id?:string;type?:TaskType;subjectId?:string;examId?:string}>(),{create,update}=useTasks(),{data:subjects}=useSubjects()
  const editing=!!params.id
- const [ready,setReady]=useState(!editing),[title,setTitle]=useState(''),[type,setType]=useState<TaskType>(params.type||'task'),[priority,setPriority]=useState<TaskPriority>('normal'),[subjectId,setSubjectId]=useState<string|null>(params.subjectId||null),[examId,setExamId]=useState<string|null>(params.examId||null),[notes,setNotes]=useState(''),[due,setDue]=useState<DueMode>('none'),[customDate,setCustomDate]=useState(dateValue(new Date())),[customTime,setCustomTime]=useState('18:00'),[reminder,setReminder]=useState<ReminderMode>('none')
+ const defaultCustomDue=()=>{const d=new Date();d.setHours(18,0,0,0);return d}
+ const [ready,setReady]=useState(!editing),[title,setTitle]=useState(''),[type,setType]=useState<TaskType>(params.type||'task'),[priority,setPriority]=useState<TaskPriority>('normal'),[subjectId,setSubjectId]=useState<string|null>(params.subjectId||null),[examId,setExamId]=useState<string|null>(params.examId||null),[notes,setNotes]=useState(''),[due,setDue]=useState<DueMode>('none'),[customDateTime,setCustomDateTime]=useState<Date>(defaultCustomDue),[showCustomPicker,setShowCustomPicker]=useState(false),[reminder,setReminder]=useState<ReminderMode>('none')
 
- useEffect(()=>{if(!params.id)return;(async()=>{const task=await taskService.getById(params.id!);if(!task){setReady(true);return}setTitle(task.title);setType(task.type as TaskType);setPriority(task.priority as TaskPriority);setSubjectId(task.subjectId);setExamId(task.examId);setNotes(task.notes||'');if(task.dueAt){const d=new Date(task.dueAt);setDue('custom');setCustomDate(dateValue(d));setCustomTime(timeValue(d));if(task.reminderAt){const mins=Math.round((+d-+new Date(task.reminderAt))/60000);setReminder(mins>=1440?'1d':'1h')}}setReady(true)})()},[params.id])
+ useEffect(()=>{if(!params.id)return;(async()=>{const task=await taskService.getById(params.id!);if(!task){setReady(true);return}setTitle(task.title);setType(task.type as TaskType);setPriority(task.priority as TaskPriority);setSubjectId(task.subjectId);setExamId(task.examId);setNotes(task.notes||'');if(task.dueAt){const d=new Date(task.dueAt);setDue('custom');setCustomDateTime(d);if(task.reminderAt){const mins=Math.round((+d-+new Date(task.reminderAt))/60000);setReminder(mins>=1440?'1d':'1h')}}setReady(true)})()},[params.id])
 
- const dueAt=useMemo(()=>{if(due==='none')return null;if(due==='custom')return parseDateTime(customDate,customTime);const d=new Date();if(due==='tomorrow')d.setDate(d.getDate()+1);if(due==='week')d.setDate(d.getDate()+7);d.setHours(18,0,0,0);return d},[due,customDate,customTime])
+ const dueAt=useMemo(()=>{if(due==='none')return null;if(due==='custom')return customDateTime;const d=new Date();if(due==='tomorrow')d.setDate(d.getDate()+1);if(due==='week')d.setDate(d.getDate()+7);d.setHours(18,0,0,0);return d},[due,customDateTime])
  const valid=!!title.trim()&&(due!=='custom'||!!dueAt)
  const save=async()=>{if(!valid)return;let reminderAt:Date|null=null;if(dueAt&&reminder!=='none'){const granted=await requestNotificationPermission();if(granted){const mins=reminder==='1d'?1440:60;reminderAt=new Date(+dueAt-mins*60000)}}const input={title:title.trim(),notes:notes.trim()||null,type,subjectId,examId,dueAt,priority,reminderAt};if(params.id)await update(params.id,input);else await create({...input,isCompleted:false,completedAt:null,notificationId:null});r.back()}
  if(!ready)return <StyledPage flex={1} backgroundColor={C.bg}/>
@@ -88,17 +86,39 @@ export default function NewTask(){
    <Stack flexDirection="row" flexWrap="wrap" gap={8}>
     {DUE_OPTIONS.map(([key,label])=>{
      const selected=due===key
-     return <StyledPressable key={key} flexDirection="row" alignItems="center" paddingHorizontal={14} paddingVertical={10} borderRadius={12} backgroundColor={selected?C.primary:C.bgCard} borderWidth={1} borderColor={selected?C.primary:C.border} onPress={()=>setDue(key)}>
+     return <StyledPressable key={key} flexDirection="row" alignItems="center" paddingHorizontal={14} paddingVertical={10} borderRadius={12} backgroundColor={selected?C.primary:C.bgCard} borderWidth={1} borderColor={selected?C.primary:C.border} onPress={()=>{setDue(key);if(key==='custom')setShowCustomPicker(true)}}>
       {key==='custom'?<PremiumIcon name="calendar" size={13} color={selected?C.white:C.textSecondary}/>:null}
       <Text variant="subLabel" fontWeight="700" marginLeft={key==='custom'?6:0} color={selected?C.white:C.textSecondary}>{label}</Text>
      </StyledPressable>
     })}
    </Stack>
    {due==='custom'?
-    <Stack flexDirection="row" gap={8} marginTop={10}>
-     <TextInput value={customDate} onChangeText={setCustomDate} placeholder="YYYY-MM-DD" placeholderTextColor={C.textMuted} style={{flex:1,backgroundColor:C.bgCard,color:C.textPrimary,borderWidth:1,borderColor:C.border,borderRadius:12,padding:13,fontSize:13}}/>
-     <TextInput value={customTime} onChangeText={setCustomTime} placeholder="HH:mm" placeholderTextColor={C.textMuted} style={{width:100,backgroundColor:C.bgCard,color:C.textPrimary,borderWidth:1,borderColor:C.border,borderRadius:12,padding:13,fontSize:13}}/>
-    </Stack>
+    <StyledPressable flexDirection="row" alignItems="center" marginTop={10} paddingHorizontal={14} paddingVertical={13} borderRadius={12} backgroundColor={C.bgCard} borderWidth={1} borderColor={C.border} onPress={()=>setShowCustomPicker(true)}>
+     <PremiumIcon name="calendar" size={15} color={C.primary}/>
+     <Text variant="subLabel" fontWeight="700" color={C.textPrimary} marginLeft={9} flex={1}>{formatCustomDue(customDateTime)}</Text>
+     <PremiumIcon name="chevron" size={13} color={C.textMuted}/>
+    </StyledPressable>
+   :null}
+
+   {showCustomPicker?
+    <Modal visible transparent animationType="slide" onRequestClose={()=>setShowCustomPicker(false)}>
+     <Stack flex={1} backgroundColor="rgba(0,0,0,0.5)" justifyContent="flex-end">
+      <Stack backgroundColor={C.bgCard} borderTopLeftRadius={24} borderTopRightRadius={24}>
+       <Stack flexDirection="row" alignItems="center" justifyContent="space-between" paddingHorizontal={20} paddingVertical={14} borderBottomWidth={1} borderBottomColor={C.border}>
+        <StyledPressable onPress={()=>setShowCustomPicker(false)}><Text variant="button" color={C.textMuted}>Cancel</Text></StyledPressable>
+        <Text variant="title" color={C.textPrimary}>Due date &amp; time</Text>
+        <StyledPressable onPress={()=>setShowCustomPicker(false)}><Text variant="button" color={C.primary}>Done</Text></StyledPressable>
+       </Stack>
+       <Stack paddingHorizontal={16} paddingBottom={32}>
+        <StyledDatePicker
+         mode="datetime" variant="inline" value={customDateTime}
+         onChange={setCustomDateTime} showTodayButton
+         colors={{selected:C.primary,today:C.primary,confirmBg:C.primary}}
+        />
+       </Stack>
+      </Stack>
+     </Stack>
+    </Modal>
    :null}
 
    {/* Priority */}

@@ -11,7 +11,7 @@ import type { Subject, Task, Exam, Day } from "../../db/schema";
 import { DAYS, DAY_FULL } from "../../db/schema";
 import { getCalendarDateState } from "../../utils/dateState";
 
-const formatExamDate = (value: string) =>
+const formatExamDate = (value: Date) =>
   new Date(value).toLocaleDateString(undefined, {
     weekday: "short",
     month: "short",
@@ -101,14 +101,15 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
   ];
   const nextLessonRel = nextLesson ? relativeLabel(nextLesson) : null;
   return (
- <StyledPage
+    <StyledPage
       showStatusBar
       statusBarStyle="dark-content"
       backgroundColor={C.bg}
     >
       <StyledPage.Header
-        title={''}
+        title={subject.name}
         titleAlignment="left"
+        titleProps={{ fontSize: 22, fontWeight: "700", color: C.textPrimary }}
         showBackArrow
         shapeProps={{
           cycle: true,
@@ -136,40 +137,15 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
         }
       />
       <ScrollView
-        contentContainerStyle={{ padding: 16, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── Subject identity ──────────────────────────────────────────────── */}
-        <Stack flexDirection="row" alignItems="center" gap={12}>
-         
-          <Stack flex={1}>
-            <Text
-              variant="display"
-              fontSize={28}
-              lineHeight={34}
-              color={C.textPrimary}
-              numberOfLines={1}
-            >
-              {subject.name}
-            </Text>
-            <Text
-              variant="bodySmall"
-              color={C.textSecondary}
-              marginTop={2}
-              numberOfLines={1}
-            >
-              {[subject.teacher, subject.room].filter(Boolean).join(" · ") ||
-                "Your subject"}
-            </Text>
-          </Stack>
-        </Stack>
-
         {/* ── Next lesson — compact, real next occurrence, no decorative blob ─── */}
         <StyledPressable onPress={() => router.push("/timetable" as any)}>
           <Stack
             flexDirection="row"
             alignItems="center"
-            marginTop={18}
+            marginTop={16}
             padding={16}
             borderRadius={20}
             backgroundColor={C.bgCard}
@@ -220,32 +196,6 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
                       {subject.startTime} – {subject.endTime}
                     </Text>
                   </Stack>
-                  {nextLessonRel ? (
-                    <Stack
-                      flexDirection="row"
-                      alignItems="center"
-                      alignSelf="flex-start"
-                      marginTop={7}
-                      paddingHorizontal={9}
-                      paddingVertical={4}
-                      borderRadius={20}
-                      backgroundColor={subject.color + "14"}
-                    >
-                      <PremiumIcon
-                        name="clock"
-                        size={10}
-                        color={subject.color}
-                      />
-                      <Text
-                        fontSize={10}
-                        fontWeight="700"
-                        color={subject.color}
-                        marginLeft={4}
-                      >
-                        {nextLessonRel}
-                      </Text>
-                    </Stack>
-                  ) : null}
                 </>
               ) : (
                 <Text variant="label" color={C.textSecondary} marginTop={4}>
@@ -253,16 +203,28 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
                 </Text>
               )}
             </Stack>
-            <Stack
-              width={28}
-              height={28}
-              borderRadius={14}
-              alignItems="center"
-              justifyContent="center"
-              backgroundColor={C.bgMuted}
-            >
-              <PremiumIcon name="chevron" size={13} color={C.textMuted} />
-            </Stack>
+            {nextLessonRel ? (
+              <Stack
+                flexDirection="row"
+                alignItems="center"
+                alignSelf="flex-start"
+                marginTop={7}
+                paddingHorizontal={9}
+                paddingVertical={4}
+                borderRadius={20}
+                backgroundColor={subject.color + "14"}
+              >
+                <PremiumIcon name="clock" size={10} color={subject.color} />
+                <Text
+                  fontSize={10}
+                  fontWeight="700"
+                  color={subject.color}
+                  marginLeft={4}
+                >
+                  {nextLessonRel}
+                </Text>
+              </Stack>
+            ) : null}
           </Stack>
         </StyledPressable>
 
@@ -319,11 +281,12 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
           flexDirection="row"
           justifyContent="space-between"
           alignItems="center"
-          marginTop={26}
+          marginTop={16}
+          marginHorizontal={8}
           marginBottom={10}
         >
           <Stack>
-            <Text variant="title" color={C.textPrimary}>
+            <Text variant="body" color={C.textMuted}>
               Schedule
             </Text>
             <Text variant="caption" color={C.textMuted}>
@@ -353,7 +316,7 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
               borderBottomWidth={index === days.length - 1 ? 0 : 1}
               borderColor={C.border}
             >
-              <Stack  flex={1}>
+              <Stack flex={1}>
                 <Text variant="label" color={C.textPrimary}>
                   {DAY_FULL[d as keyof typeof DAY_FULL]}
                 </Text>
@@ -382,10 +345,11 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
           justifyContent="space-between"
           alignItems="center"
           marginTop={27}
+          marginHorizontal={8}
           marginBottom={10}
         >
           <Stack>
-            <Text variant="title" color={C.textPrimary}>
+            <Text variant="body" color={C.textMuted}>
               Tasks
             </Text>
             <Text variant="caption" color={C.textMuted}>
@@ -500,11 +464,12 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
           flexDirection="row"
           justifyContent="space-between"
           alignItems="center"
-          marginTop={27}
+          marginTop={16}
+          marginHorizontal={8}
           marginBottom={10}
         >
           <Stack>
-            <Text variant="title" color={C.textPrimary}>
+            <Text variant="body" color={C.textMuted}>
               Upcoming exam
             </Text>
             <Text variant="caption" color={C.textMuted}>

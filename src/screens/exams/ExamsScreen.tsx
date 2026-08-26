@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ScrollView } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import {
   Stack,
@@ -19,6 +20,7 @@ import { useColors } from "../../constants";
 import { useExams } from "../../hooks/useExams";
 import { useSubjects } from "../../hooks";
 import { Text, SwipeDeleteAction } from "../../components";
+import { FLOATING_TAB_BAR_HEIGHT } from "../../components/FloatingTabBar";
 import type { Exam } from "../../db/schema";
 import { AddExamSheet } from "./AddExamSheet";
 import { EditExamSheet } from "./EditExamSheet";
@@ -26,7 +28,7 @@ import { EditExamSheet } from "./EditExamSheet";
 // ─── Countdown badge helpers ───────────────────────────────────────────────────
 function countdownLabel(
   date: Date,
-  Colors: ReturnType<typeof useColors>
+  Colors: ReturnType<typeof useColors>,
 ): {
   text: string;
   color: string;
@@ -35,13 +37,29 @@ function countdownLabel(
   if (isToday(date))
     return { text: "Today!", color: Colors.error, bg: Colors.error + "33" };
   if (isTomorrow(date))
-    return { text: "Tomorrow", color: Colors.warning, bg: Colors.warning + "33" };
+    return {
+      text: "Tomorrow",
+      color: Colors.warning,
+      bg: Colors.warning + "33",
+    };
   const days = differenceInDays(date, new Date());
   if (days <= 7)
-    return { text: `${days}d`, color: Colors.warning, bg: Colors.warning + "33" };
+    return {
+      text: `${days}d`,
+      color: Colors.warning,
+      bg: Colors.warning + "33",
+    };
   if (days <= 30)
-    return { text: `${days}d`, color: Colors.textMuted, bg: Colors.textMuted + "20" };
-  return { text: format(date, "MMM d"), color: Colors.textMuted, bg: Colors.textMuted + "20" };
+    return {
+      text: `${days}d`,
+      color: Colors.textMuted,
+      bg: Colors.textMuted + "20",
+    };
+  return {
+    text: format(date, "MMM d"),
+    color: Colors.textMuted,
+    bg: Colors.textMuted + "20",
+  };
 }
 
 // ─── Single exam row ───────────────────────────────────────────────────────────
@@ -87,10 +105,7 @@ function ExamRow({
       onDelete={() => onDelete(exam)}
       destructiveColor={Colors.error}
     >
-      <StyledPressable
-        onPress={() => onPress(exam)}
-        opacity={isPast ? 0.5 : 1}
-      >
+      <StyledPressable onPress={() => onPress(exam)} opacity={isPast ? 0.5 : 1}>
         <Stack
           horizontal
           alignItems="center"
@@ -115,11 +130,7 @@ function ExamRow({
 
           {/* Content */}
           <Stack flex={1} gap={4}>
-            <Text
-              variant="label"
-              color={Colors.textPrimary}
-              numberOfLines={1}
-            >
+            <Text variant="label" color={Colors.textPrimary} numberOfLines={1}>
               {exam.title}
             </Text>
             <Stack horizontal alignItems="center" gap={8} flexWrap="wrap">
@@ -177,11 +188,7 @@ function SectionLabel({ label, count }: { label: string; count: number }) {
       paddingBottom={8}
       marginHorizontal={8}
     >
-      <Text
-        variant="label"
-        color={Colors.textMuted}
-        letterSpacing={0.5}
-      >
+      <Text variant="label" color={Colors.textMuted} letterSpacing={0.5}>
         {label}
       </Text>
       <Stack
@@ -201,6 +208,7 @@ function SectionLabel({ label, count }: { label: string; count: number }) {
 // ─── Main screen ───────────────────────────────────────────────────────────────
 export default function ExamsScreen() {
   const Colors = useColors();
+  const insets = useSafeAreaInsets();
   const {
     data: allExams,
     loading,
@@ -218,7 +226,7 @@ export default function ExamsScreen() {
   const params = useLocalSearchParams<{ add?: string }>();
 
   useEffect(() => {
-    if (params.add === '1') setShowAdd(true);
+    if (params.add === "1") setShowAdd(true);
   }, [params.add]);
 
   useFocusEffect(
@@ -254,25 +262,45 @@ export default function ExamsScreen() {
   );
 
   return (
-    <StyledPage backgroundColor={Colors.bg}>
-      {/* Exams is a tab root, not a pushed screen — no back button (see the
+    <StyledPage
+      showStatusBar
+      statusBarStyle={"dark-content"}
+      backgroundColor={Colors.bg}
+    >
+      <StyledPage.Header.Full>
+        {/* Exams is a tab root, not a pushed screen — no back button (see the
           header consolidation: root screens use this inline-title pattern,
           the same one Today/Tasks use, rather than a back-navigation header). */}
-      <Stack paddingHorizontal={16} paddingTop={24} paddingBottom={8}>
-        <Stack flexDirection="row" alignItems="flex-end" justifyContent="space-between">
-          <Stack>
-            <Text variant="display" fontSize={29} lineHeight={36} color={Colors.textPrimary}>Exams</Text>
-            <Text variant="bodySmall" color={Colors.textSecondary}>Upcoming and past assessments.</Text>
-          </Stack>
-          {past.length > 0 ? (
-            <StyledPressable onPress={() => setShowPast((v) => !v)}>
-              <Text variant="label" fontWeight="700" color={Colors.primary}>
-                {showPast ? "Hide past" : "Show past"}
+        <Stack paddingHorizontal={16}  paddingBottom={8}>
+          <Stack
+            flexDirection="row"
+            alignItems="flex-end"
+            justifyContent="space-between"
+          >
+            <Stack>
+              <Text
+                variant="display"
+                fontSize={29}
+                lineHeight={36}
+                color={Colors.textPrimary}
+              >
+                Exams
               </Text>
-            </StyledPressable>
-          ) : null}
+              <Text variant="bodySmall" color={Colors.textSecondary}>
+                Upcoming and past assessments.
+              </Text>
+            </Stack>
+            {past.length > 0 ? (
+              <StyledPressable onPress={() => setShowPast((v) => !v)}>
+                <Text variant="label" fontWeight="700" color={Colors.primary}>
+                  {showPast ? "Hide past" : "Show past"}
+                </Text>
+              </StyledPressable>
+            ) : null}
+          </Stack>
         </Stack>
-      </Stack>
+      </StyledPage.Header.Full>
+
       <Stack flex={1} backgroundColor={Colors.bg}>
         {/* Body */}
         {loading ? (
@@ -315,7 +343,12 @@ export default function ExamsScreen() {
                           subjectName={sub.name}
                           subjectColor={sub.color}
                           isPast={false}
-                          onPress={(exam) => router.push({ pathname: '/exam/[id]', params: { id: exam.id } } as any)}
+                          onPress={(exam) =>
+                            router.push({
+                              pathname: "/exam/[id]",
+                              params: { id: exam.id },
+                            } as any)
+                          }
                           onDelete={handleDelete}
                           openSwipeId={openSwipeId}
                           onSwipeOpen={setOpenSwipeId}
@@ -339,11 +372,7 @@ export default function ExamsScreen() {
                 gap={6}
               >
                 <StyledText fontSize={36}>🎉</StyledText>
-                <Text
-                  variant="body"
-                  fontWeight="600"
-                  color={Colors.textMuted}
-                >
+                <Text variant="body" fontWeight="600" color={Colors.textMuted}>
                   No upcoming exams
                 </Text>
               </Stack>
@@ -352,12 +381,11 @@ export default function ExamsScreen() {
             {/* ── Past ───────────────────────────────────────────────── */}
             {showPast && past.length > 0 && (
               <>
-              <StyledSpacer marginVertical={4} />
+                <StyledSpacer marginVertical={4} />
                 <SectionLabel label="Past" count={past.length} />
                 <StyledCard
                   shadow="light"
                   borderRadius={16}
-                  
                   backgroundColor={Colors.bgCard}
                   borderWidth={1}
                   borderColor={Colors.border}
@@ -372,7 +400,12 @@ export default function ExamsScreen() {
                           subjectName={sub.name}
                           subjectColor={sub.color}
                           isPast
-                          onPress={(exam) => router.push({ pathname: '/exam/[id]', params: { id: exam.id } } as any)}
+                          onPress={(exam) =>
+                            router.push({
+                              pathname: "/exam/[id]",
+                              params: { id: exam.id },
+                            } as any)
+                          }
                           onDelete={handleDelete}
                           openSwipeId={openSwipeId}
                           onSwipeOpen={setOpenSwipeId}
@@ -392,11 +425,14 @@ export default function ExamsScreen() {
           </ScrollView>
         )}
 
-        {/* FAB */}
+        {/* FAB — cleared above the floating tab bar's actual touchable area
+            (insets.bottom + its rendered height), not a guessed fixed value,
+            so taps near the bottom of the button don't land on the tab bar
+            underneath it. */}
         <StyledPressable
           position="absolute"
           right={20}
-          bottom={90}
+          bottom={insets.bottom + FLOATING_TAB_BAR_HEIGHT + 14}
           width={58}
           height={58}
           borderRadius={29}
@@ -441,4 +477,3 @@ export default function ExamsScreen() {
     </StyledPage>
   );
 }
-

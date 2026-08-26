@@ -185,8 +185,8 @@ export default function TodayScreen({ embedded = false, onViewTimetable }: Props
       </Stack>
 
       {/* ── Today's schedule — one cohesive agenda, not separate cards ──── */}
-      <Stack flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom={10}>
-        <Text variant="subtitle" fontSize={16} color={C.textPrimary}>Today's schedule</Text>
+      <Stack paddingHorizontal={8} flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom={10}>
+        <Text variant="body" fontSize={16} color={C.textMuted}>Schedule</Text>
         <StyledPressable hitSlop={8} onPress={goTimetable}>
           <Text variant="caption" fontWeight="700" color={C.primary}>View timetable</Text>
         </StyledPressable>
@@ -219,8 +219,8 @@ export default function TodayScreen({ embedded = false, onViewTimetable }: Props
       )}
 
       {/* ── Things to do ──────────────────────────────────────────────── */}
-      <Stack flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom={10}>
-        <Text variant="subtitle" fontSize={16} color={C.textPrimary}>Things to do</Text>
+      <Stack paddingHorizontal={8} flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom={10}>
+        <Text variant="body" fontSize={16} color={C.textMuted}>Things to do</Text>
         <StyledPressable hitSlop={8} onPress={() => router.push('/(tabs)/tasks' as any)}>
           <Text variant="caption" fontWeight="700" color={C.primary}>See all</Text>
         </StyledPressable>
@@ -266,10 +266,10 @@ export default function TodayScreen({ embedded = false, onViewTimetable }: Props
       {/* ── Upcoming exam ─────────────────────────────────────────────── */}
       {nextExam ? (
         <Stack>
-          <Stack flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom={10}>
-            <Text variant="subtitle" fontSize={16} color={C.textPrimary}>Upcoming exam</Text>
+          <Stack paddingHorizontal={8} flexDirection="row" justifyContent="space-between" alignItems="center" marginBottom={10}>
+            <Text variant="body" fontSize={16} color={C.textMuted}>Upcoming exam</Text>
             <StyledPressable hitSlop={8} onPress={() => router.push('/(tabs)/exams' as any)}>
-              <Text variant="caption" fontWeight="700" color={C.primary}>View all</Text>
+              <Text variant="caption" fontWeight="700" color={C.primary}>See all</Text>
             </StyledPressable>
           </Stack>
           <StyledPressable onPress={() => router.push({ pathname: '/exam/[id]', params: { id: nextExam.id } } as any)}>
