@@ -2,7 +2,7 @@
   "expo": {
     "name": "Kronos",
     "slug": "kronos",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -21,7 +21,9 @@
         "NSCameraUsageDescription": "Kronos uses the camera to scan timetable QR codes.",
         "NSPhotoLibraryUsageDescription": "Kronos saves timetable QR codes to your photo library.",
         "NSDocumentsFolderUsageDescription": "Kronos reads timetable files you choose to import.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocalNetworkUsageDescription": "Kronos uses your local network during development to connect to the Metro bundler on your computer. This code path doesn't run in release builds.",
+        "NSBonjourServices": ["_dev._tcp"]
       }
     },
     "android": {
