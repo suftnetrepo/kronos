@@ -47,6 +47,13 @@ function RootLayoutNav() {
           animation: "slide_from_bottom",
         }}
       />
+      <Stack.Screen name="timetable" options={{ headerShown: false }} />
+      <Stack.Screen name="quick-add" options={{ presentation: "transparentModal", headerShown: false, animation: "fade" }} />
+      <Stack.Screen name="new-task" options={{ presentation: "modal", headerShown: false }} />
+      <Stack.Screen name="task/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="subject/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="exam/[id]" options={{ headerShown: false }} />
+      <Stack.Screen name="calendar" options={{ headerShown: false }} />
       <Stack.Screen
         name="premium"
         options={{ presentation: "modal", headerShown: false }}

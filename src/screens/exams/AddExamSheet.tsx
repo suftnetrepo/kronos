@@ -12,6 +12,7 @@ import {
 import { toastService, loaderService } from "fluent-styles";
 import { format } from "date-fns";
 import { Text } from "../../components/text";
+import { ModalFormHeader } from "../../components/ModalFormHeader";
 import { useColors } from "../../constants";
 import { EXAM_REMINDER_OPTIONS } from "../../constants";
 import { useExams } from "../../hooks/useExams";
@@ -159,34 +160,12 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
           </Stack>
 
           {/* Header */}
-          <Stack
-            flexDirection="row"
-            alignItems="center"
-            justifyContent="space-between"
-            paddingHorizontal={20}
-            paddingVertical={14}
-            borderBottomWidth={1}
-            borderBottomColor={Colors.border}
-          >
-            <StyledPressable
-              onPress={() => {
-                reset();
-                onClose();
-              }}
-            >
-              <Text variant="button" color={Colors.textMuted}>
-                Cancel
-              </Text>
-            </StyledPressable>
-            <Text variant="title" color={Colors.textPrimary}>
-              Exam
-            </Text>
-            <StyledPressable onPress={handleSave} disabled={!isValid}>
-              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>
-                Save
-              </Text>
-            </StyledPressable>
-          </Stack>
+          <ModalFormHeader
+            title="Exam"
+            onCancel={() => { reset(); onClose(); }}
+            onSave={handleSave}
+            saveDisabled={!isValid}
+          />
 
           <ScrollView
             showsVerticalScrollIndicator={false}

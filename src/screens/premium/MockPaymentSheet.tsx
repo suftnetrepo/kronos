@@ -50,7 +50,7 @@ export const MockPaymentSheet: React.FC<MockPaymentSheetProps> = ({
         >
           {/* Apple Pay–style header */}
           <Stack
-            backgroundColor="#F2F2F7"
+            backgroundColor={Colors.bgMuted}
             paddingVertical={16} paddingHorizontal={20}
             alignItems="center"
             borderBottomWidth={1} borderBottomColor={Colors.border}
@@ -62,7 +62,7 @@ export const MockPaymentSheet: React.FC<MockPaymentSheetProps> = ({
             <Stack horizontal alignItems="center" gap={10} marginBottom={8}>
               <Stack
                 width={40} height={40} borderRadius={10}
-                backgroundColor="#4F46E5"
+                backgroundColor={Colors.primary}
                 alignItems="center" justifyContent="center"
               >
                 <StyledText fontSize={20}>⚡</StyledText>
@@ -80,8 +80,8 @@ export const MockPaymentSheet: React.FC<MockPaymentSheetProps> = ({
             {/* DEV ONLY badge */}
             {__DEV__ && (
               <Stack paddingHorizontal={10} paddingVertical={4}
-                borderRadius={8} backgroundColor="#FF9500">
-                <StyledText fontSize={10} fontWeight="700" color="#fff">
+                borderRadius={8} backgroundColor={Colors.warning}>
+                <StyledText fontSize={10} fontWeight="700" color={Colors.white}>
                   🧪 MOCK — No real charge
                 </StyledText>
               </Stack>
@@ -101,8 +101,8 @@ export const MockPaymentSheet: React.FC<MockPaymentSheetProps> = ({
             {'saving' in pricing && (
               <Stack alignItems="center" marginTop={4}>
                 <Stack paddingHorizontal={12} paddingVertical={4}
-                  borderRadius={20} backgroundColor="#6366F1">
-                  <StyledText fontSize={12} fontWeight="700" color="#fff">
+                  borderRadius={20} backgroundColor={Colors.primary}>
+                  <StyledText fontSize={12} fontWeight="700" color={Colors.white}>
                     {(pricing as any).saving}
                   </StyledText>
                 </Stack>
@@ -131,20 +131,20 @@ export const MockPaymentSheet: React.FC<MockPaymentSheetProps> = ({
           <Stack paddingHorizontal={20} gap={10}>
             <StyledPressable
               paddingVertical={16} borderRadius={14}
-              backgroundColor={processing ? Colors.bgMuted : '#6366F1'}
+              backgroundColor={processing ? Colors.bgMuted : Colors.primary}
               alignItems="center" justifyContent="center"
               onPress={handleConfirm}
               disabled={processing}
             >
               {processing ? (
                 <Stack horizontal alignItems="center" gap={10}>
-                  <ActivityIndicator size="small" color="#6366F1" />
+                  <ActivityIndicator size="small" color={Colors.primary} />
                   <StyledText fontSize={15} fontWeight="700" color={Colors.textMuted}>
                     Processing…
                   </StyledText>
                 </Stack>
               ) : (
-                <StyledText fontSize={15} fontWeight="800" color="#fff">
+                <StyledText fontSize={15} fontWeight="800" color={Colors.white}>
                   {'trial' in pricing ? 'Start Free Trial' : 'Confirm Purchase'}
                 </StyledText>
               )}

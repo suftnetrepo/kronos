@@ -1,0 +1,298 @@
+Yes. Before changing the limit, the agent should trace the **entire free-tier/premium gating path** for timetable creation and establish why it stops at 3.
+
+Give the agent this prompt:
+
+```text
+TASK: Audit the Kronos timetable creation premium/free-tier gate.
+
+DO NOT CHANGE CODE YET.
+
+I have noticed that a free-tier user appears to be limited to creating only 3 timetable/classes/subjects.
+
+Before we modify anything, perform a complete audit of the gating logic and determine exactly why the limit is 3 and whether that behaviour is intentional.
+
+This is an AUDIT ONLY.
+
+--------------------------------------------------
+1. TRACE THE COMPLETE CREATE TIMETABLE FLOW
+--------------------------------------------------
+
+Start from every UI entry point that allows the user to create timetable data.
+
+Trace:
+
+Create/Add button
+→ route/screen
+→ form
+→ submit handler
+→ service
+→ database
+→ premium/free-tier gate
+→ entitlement/subscription check
+→ limit calculation
+→ error/paywall shown to the user
+
+Do not assume the gate is located on the timetable screen itself.
+
+Search the complete repository.
+
+--------------------------------------------------
+2. FIND EVERY LIMIT RELATED TO TIMETABLE CREATION
+--------------------------------------------------
+
+Search for all relevant constants and logic including terms such as:
+
+FREE
+FREE_TIER
+LIMIT
+MAX
+premium
+entitlement
+subscription
+subject
+subjects
+class
+classes
+timetable
+schedule
+lesson
+3
+freeLimit
+canCreate
+canAdd
+PremiumGate
+premium.config
+
+Do not simply search for the number 3 and stop.
+
+Identify whether the restriction applies to:
+
+- 3 subjects
+- 3 timetable entries
+- 3 classes
+- 3 schedules
+- 3 lessons per subject
+- 3 total records
+- or some combination of these
+
+I need the exact behaviour.
+
+--------------------------------------------------
+3. AUDIT premium.config.ts
+--------------------------------------------------
+
+Inspect the existing premium configuration carefully.
+
+The previous TypeScript baseline already showed premium.config.ts as one of the files with a pre-existing error, so inspect it without assuming it is correct.
+
+Report:
+
+- current free-tier limits
+- premium-tier limits
+- timetable-related limits
+- subject-related limits
+- task limits
+- exam limits
+- any unlimited values
+- how those limits are consumed by the application
+
+Determine whether the value 3 originates here or somewhere else.
+
+--------------------------------------------------
+4. CHECK FOR DUPLICATE GATING
+--------------------------------------------------
+
+This is important.
+
+Determine whether timetable creation is being restricted in more than one place.
+
+For example:
+
+UI gate
++
+subject creation gate
++
+service gate
++
+PremiumGate
++
+database/count check
+
+There should not be multiple conflicting definitions of the free-tier limit.
+
+Find every place where the same restriction is implemented.
+
+Report any duplicated or inconsistent limits.
+
+--------------------------------------------------
+5. DISTINGUISH SUBJECTS FROM TIMETABLE ENTRIES
+--------------------------------------------------
+
+The audit must establish the application's actual data model.
+
+For example, if the user creates:
+
+English
+Monday 09:00
+Tuesday 09:00
+Wednesday 09:00
+Thursday 09:00
+Friday 09:00
+
+is that:
+
+1 subject + 5 timetable entries
+
+or
+
+5 class records?
+
+Then determine what the free-tier gate is counting.
+
+This distinction is critical.
+
+A limit of 3 SUBJECTS is very different from allowing only 3 timetable slots.
+
+--------------------------------------------------
+6. REPRODUCE THE FREE USER SCENARIO FROM CODE
+--------------------------------------------------
+
+Trace what happens when a free user creates:
+
+First item
+Second item
+Third item
+Fourth item
+
+For each step report:
+
+- current count
+- configured limit
+- gate result
+- whether creation is allowed
+- what UI is shown if blocked
+- whether PremiumGate/paywall opens
+
+Explain exactly why item #4 fails, if that is indeed what happens.
+
+--------------------------------------------------
+7. CHECK EDITING BEHAVIOUR
+--------------------------------------------------
+
+Make sure the limit is not incorrectly applied when EDITING an existing timetable/subject.
+
+A user at the free limit should normally still be able to edit an existing record.
+
+Verify:
+
+Create → gate applies
+
+Edit → should not accidentally count as another creation
+
+Delete → count decreases correctly
+
+Delete then create → creation becomes available again if appropriate
+
+Report the actual current behaviour.
+
+--------------------------------------------------
+8. CHECK PREMIUM USERS
+--------------------------------------------------
+
+Trace the same flow for a premium user.
+
+Confirm whether premium users are:
+
+- unlimited
+- given a larger limit
+- or accidentally still subject to the free-tier gate
+
+Follow the actual entitlement/subscription state used by Kronos.
+
+Do not assume PremiumGate itself guarantees this.
+
+--------------------------------------------------
+9. CHECK PAYWALL EXPERIENCE
+--------------------------------------------------
+
+If the user reaches the free limit, inspect what happens visually.
+
+Determine:
+
+- where the paywall is triggered
+- what message is displayed
+- whether it clearly explains what limit was reached
+- whether Cancel/back works
+- whether upgrading returns the user to the intended creation flow
+- whether theme tokens are respected
+
+Do NOT redesign it yet.
+
+Just audit it.
+
+--------------------------------------------------
+10. LOOK FOR HIDDEN/LEGACY GATES
+--------------------------------------------------
+
+Kronos has gone through multiple iterations.
+
+Check whether older timetable/homework/subject implementations contain gating logic that is still active or partially reachable.
+
+We recently found exactly this kind of issue with legacy Homework.
+
+Make sure there isn't:
+
+old timetable gate
++
+new subject gate
++
+premium gate
+
+all interacting.
+
+--------------------------------------------------
+11. DO NOT CHANGE THE LIMIT
+--------------------------------------------------
+
+Do not change 3 → another number.
+
+Do not remove PremiumGate.
+
+Do not change RevenueCat.
+
+Do not change the database.
+
+Do not modify premium.config.ts.
+
+Do not redesign the paywall.
+
+This stage is diagnosis only.
+
+--------------------------------------------------
+FINAL REPORT
+--------------------------------------------------
+
+Create a concise report containing:
+
+1. What exactly is limited to 3
+2. Where the number 3 comes from
+3. File + function/component responsible
+4. Complete create-timetable gating flow
+5. What is actually being counted
+6. Behaviour for items #1, #2, #3 and #4
+7. Free-tier behaviour
+8. Premium-tier behaviour
+9. Create vs Edit behaviour
+10. Delete/recreate behaviour
+11. Any duplicate gates found
+12. Any legacy gates found
+13. Paywall behaviour
+14. Any bugs/inconsistencies discovered
+15. Recommended fix — BUT DO NOT IMPLEMENT IT
+
+Also state what you believe the correct product rule should be based on the current architecture, separately from what the code currently does.
+
+STOP after the audit.
+
+Do not make any code changes until I review the findings.
+```

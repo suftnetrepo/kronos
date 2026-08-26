@@ -8,6 +8,15 @@ interface SettingsState extends AppSettings {
   bootReady: boolean
   setBootReady: (ready: boolean) => void
 
+  // True for exactly one render after a cold-launch hydrate when the user's
+  // persisted Default Start Tab isn't Today ('index') — consumed once by the
+  // Today tab route to redirect at startup, then cleared. This makes the
+  // startup preference actually take effect (it previously only navigated
+  // when pressed inside Settings) without turning it into a permanent lock:
+  // once cleared, the Today tab is reachable normally like any other tab.
+  startupRedirectPending: boolean
+  clearStartupRedirect: () => void
+
   // Individual setters (persist to DB)
   setLockEnabled: (enabled: boolean) => Promise<void>
   setBiometricEnabled: (enabled: boolean) => Promise<void>
@@ -22,6 +31,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   remindersEnabled: true,
   defaultTab: 'index',
   bootReady: false,
+  startupRedirectPending: false,
 
   // Hydrate from DB on app start
   hydrate: async () => {
@@ -32,6 +42,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
         biometricEnabled: all.biometricEnabled,
         remindersEnabled: all.remindersEnabled,
         defaultTab: all.defaultTab,
+        startupRedirectPending: all.defaultTab !== 'index',
         bootReady: true,
       })
     } catch (err) {
@@ -41,6 +52,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   },
 
   setBootReady: (ready) => set({ bootReady: ready }),
+  clearStartupRedirect: () => set({ startupRedirectPending: false }),
 
   // Setters (sync to DB)
   setLockEnabled: async (enabled) => {

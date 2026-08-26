@@ -1,17 +1,9 @@
-import React, { useState } from 'react'
-import { router } from 'expo-router'
-import { Stack } from 'fluent-styles'
-import { AddHomeworkSheet } from '../src/screens/homework/AddHomeworkSheet'
+import { Redirect } from 'expo-router'
 
-export default function AddHomeworkRoute() {
-  const [visible] = useState(true)
-
-  return (
-    <Stack flex={1} backgroundColor="transparent">
-      <AddHomeworkSheet
-        visible={visible}
-        onClose={() => router.back()}
-      />
-    </Stack>
-  )
+// Obsolete entry point — legacy homework created here would never appear in
+// Today/Tasks/Calendar/Subject Detail/Exam Detail (see the product audit).
+// Redirect to the New Task flow with type=homework, which is the unified,
+// fully-wired path for creating homework.
+export default function AddHomeworkRedirect() {
+  return <Redirect href={{ pathname: '/new-task', params: { type: 'homework' } } as any} />
 }

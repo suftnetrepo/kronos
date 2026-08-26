@@ -7,6 +7,11 @@ import { scheduleExamReminder, cancelExamReminder } from './notificationService'
 
 export const examService = {
 
+  getById: async (id: string): Promise<Exam | null> => {
+    const rows = await db.select().from(exams).where(eq(exams.id, id))
+    return rows[0] ?? null
+  },
+
   getAll: async (): Promise<Exam[]> => {
     return db.select().from(exams).orderBy(asc(exams.date))
   },

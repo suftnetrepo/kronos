@@ -3411,10 +3411,10 @@ flow-parser@0.*:
   resolved "https://registry.npmjs.org/flow-parser/-/flow-parser-0.309.0.tgz"
   integrity sha512-poYRskeIXiHsE19Fb9sRE/CV7PYOq21j3lS5vKr27ujFBvSAhmCbbilAonJ0/u0Uai+Xgyq30/twHQeQc2Ngiw==
 
-fluent-styles@1.62.9:
-  version "1.62.9"
-  resolved "https://registry.yarnpkg.com/fluent-styles/-/fluent-styles-1.62.9.tgz#324210d73db5a662971e7fe15d818c2e6b942e80"
-  integrity sha512-6/4qZdlB0os6qcqhZ6rO73euTSCFFbxN+FXr1jkDxZ8AxJpW6ewQDy7zT/x8kfmo1si9D/4SPY5LiCNEtWkCIA==
+fluent-styles@1.62.10:
+  version "1.62.10"
+  resolved "https://registry.yarnpkg.com/fluent-styles/-/fluent-styles-1.62.10.tgz#198d7adbd26d929aecc3c607e67af09eb29117a2"
+  integrity sha512-sZprr8KyZ0zdQEIFzR1sL3kGuBnk7t36TlxBh+VTfLEPDkcJxXNv3hCgLquuLvyVkDFOozQ3riX3eONt/nXe+w==
   dependencies:
     react-native-popover-view "^6.1.0"
 

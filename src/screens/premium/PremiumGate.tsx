@@ -52,10 +52,10 @@ export const PremiumGate: React.FC<PremiumGateProps> = ({
         </Stack>
         <StyledPressable
           paddingVertical={8} paddingHorizontal={14}
-          borderRadius={20} backgroundColor="#6366F1"
+          borderRadius={20} backgroundColor={Colors.primary}
           onPress={() => router.push('/premium' as any)}
         >
-          <StyledText fontSize={12} fontWeight="700" color="#fff">Upgrade</StyledText>
+          <StyledText fontSize={12} fontWeight="700" color={Colors.white}>Upgrade</StyledText>
         </StyledPressable>
       </Stack>
     )
@@ -72,7 +72,7 @@ export const PremiumGate: React.FC<PremiumGateProps> = ({
     >
       <Stack
         width={52} height={52} borderRadius={26}
-        backgroundColor="#6366F115"
+        backgroundColor={Colors.primary + '15'}
         alignItems="center" justifyContent="center"
       >
         <StyledText fontSize={24}>🔒</StyledText>
@@ -89,17 +89,17 @@ export const PremiumGate: React.FC<PremiumGateProps> = ({
       </Stack>
       <StyledPressable
         paddingVertical={12} paddingHorizontal={28}
-        borderRadius={24} backgroundColor="#6366F1"
+        borderRadius={24} backgroundColor={Colors.primary}
         onPress={() => router.push('/premium' as any)}
         style={{
-          shadowColor:   '#6366F1',
+          shadowColor:   Colors.primary,
           shadowOffset:  { width: 0, height: 4 },
           shadowOpacity: 0.3,
           shadowRadius:  8,
           elevation:     4,
         }}
       >
-        <StyledText fontSize={14} fontWeight="700" color="#fff">
+        <StyledText fontSize={14} fontWeight="700" color={Colors.white}>
           Unlock with Premium ⚡
         </StyledText>
       </StyledPressable>
@@ -126,18 +126,18 @@ export const PremiumBanner: React.FC<{
       marginHorizontal={16} marginBottom={12}
       paddingVertical={12} paddingHorizontal={16}
       borderRadius={16}
-      backgroundColor="#6366F115"
-      borderWidth={1} borderColor="#6366F130"
+      backgroundColor={Colors.primary + '15'}
+      borderWidth={1} borderColor={Colors.primary + '30'}
       onPress={() => router.push('/premium' as any)}
     >
       <StyledText fontSize={20}>⚡</StyledText>
       <Stack flex={1} gap={2}>
-        <StyledText fontSize={13} fontWeight="700" color="#6366F1">{message}</StyledText>
+        <StyledText fontSize={13} fontWeight="700" color={Colors.primary}>{message}</StyledText>
         {subtext && (
           <StyledText fontSize={11} color={Colors.textMuted}>{subtext}</StyledText>
         )}
       </Stack>
-      <StyledText fontSize={13} fontWeight="700" color="#6366F1">→</StyledText>
+      <StyledText fontSize={13} fontWeight="700" color={Colors.primary}>→</StyledText>
     </StyledPressable>
   )
 }

@@ -14,7 +14,7 @@ export const PREMIUM_PRICING = {
 
 // ─── Free tier limits ──────────────────────────────────────────────────────────
 export const FREE_LIMITS = {
-  SUBJECTS:         3,
+  SUBJECTS:         8,
   HOMEWORK_MONTH:   10,
   EXAMS:            3,
 } as const

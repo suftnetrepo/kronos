@@ -20,9 +20,11 @@ export const STORAGE_KEYS = {
 
 // Tab navigation routes - public paths (not route group syntax)
 export const TAB_ROUTES = {
-  index:    '/',
+  index: '/',
+  tasks: '/tasks',
+  exams: '/exams',
+  more: '/more',
   homework: '/homework',
-  exams:    '/exams',
   settings: '/settings',
 } as const
 

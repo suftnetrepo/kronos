@@ -58,6 +58,28 @@ export const exams = sqliteTable('exams', {
   updatedAt:    integer('updated_at', { mode: 'timestamp' }).notNull(),
 })
 
+
+// ─── Tasks (Kronos V2) ───────────────────────────────────────────────────────
+export const tasks = sqliteTable('tasks', {
+  id:              text('id').primaryKey(),
+  title:           text('title').notNull(),
+  notes:           text('notes'),
+  type:            text('type').notNull().default('task'),
+  subjectId:       text('subject_id').references(() => subjects.id, { onDelete: 'set null' }),
+  examId:          text('exam_id').references(() => exams.id, { onDelete: 'set null' }),
+  dueAt:           integer('due_at', { mode: 'timestamp' }),
+  priority:        text('priority').notNull().default('normal'),
+  isCompleted:     integer('is_completed', { mode: 'boolean' }).notNull().default(false),
+  completedAt:     integer('completed_at', { mode: 'timestamp' }),
+  reminderAt:      integer('reminder_at', { mode: 'timestamp' }),
+  notificationId: text('notification_id'),
+  createdAt:       integer('created_at', { mode: 'timestamp' }).notNull(),
+  updatedAt:       integer('updated_at', { mode: 'timestamp' }).notNull(),
+})
+
+export type TaskType = 'task' | 'homework' | 'study' | 'assignment'
+export type TaskPriority = 'normal' | 'medium' | 'high'
+
 // ─── Settings (singleton) ─────────────────────────────────────────────────────
 // Stores both timetable settings (firstDayOfWeek, semesterStart/End) and
 // app-level settings (lockEnabled, biometricEnabled, remindersEnabled)
@@ -84,6 +106,8 @@ export type Homework    = typeof homework.$inferSelect
 export type NewHomework = typeof homework.$inferInsert
 export type Exam        = typeof exams.$inferSelect
 export type NewExam     = typeof exams.$inferInsert
+export type Task         = typeof tasks.$inferSelect
+export type NewTask      = typeof tasks.$inferInsert
 export type Settings    = typeof settings.$inferSelect
 
 // ─── Day constants ────────────────────────────────────────────────────────────

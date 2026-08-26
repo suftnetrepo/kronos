@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications'
 import type { Subject, Day }  from '../db/schema'
 import { DAY_FULL }            from '../db/schema'
 import { db } from '../db'
-import { subjects, exams } from '../db/schema'
+import { subjects, exams, tasks } from '../db/schema'
 import { eq } from 'drizzle-orm'
 import { getSetting } from './settings.service'
 
@@ -174,6 +174,44 @@ async function verifyReminderIdsExist(reminderIds: string[]): Promise<string[]> 
   }
 }
 
+
+// ─── Task reminders ───────────────────────────────────────────────────────────
+export const scheduleTaskReminder = async (
+  taskId: string,
+  taskTitle: string,
+  reminderAt: Date,
+): Promise<string | null> => {
+  const remindersEnabled = await getSetting<boolean>('remindersEnabled')
+  if (!remindersEnabled) return null
+  const hasPermission = await hasNotificationPermission()
+  if (!hasPermission || reminderAt <= new Date()) return null
+  try {
+    return await Notifications.scheduleNotificationAsync({
+      content: {
+        title: `⏰ ${taskTitle}`,
+        body: 'You asked Kronos to remind you about this task.',
+        data: { taskId },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: reminderAt,
+      },
+    })
+  } catch (err) {
+    console.error('[notificationService] Failed to schedule task reminder:', err)
+    return null
+  }
+}
+
+export const cancelTaskReminder = async (notificationId: string | null | undefined): Promise<void> => {
+  if (!notificationId) return
+  try {
+    await Notifications.cancelScheduledNotificationAsync(notificationId)
+  } catch (err) {
+    console.warn(`[notificationService] Failed to cancel task reminder ${notificationId}:`, err)
+  }
+}
+
 // ─── Reschedule all reminders on app startup ─────────────────────────────────
 // This ensures reminders are restored if they were cleared by the OS, permissions
 // changed, or other edge cases occurred. Verifies stored IDs before skipping.
@@ -235,6 +273,32 @@ export const rescheduleAllReminders = async (): Promise<void> => {
         console.error(`[notificationService] Failed to reschedule reminders for "${subject.name}":`, err)
       }
     }
+    // Reschedule one-time task reminders that are missing from the OS.
+    const allTasks = await db.select().from(tasks)
+    for (const task of allTasks) {
+      if (task.isCompleted || !task.reminderAt) continue
+      const reminderAt = new Date(task.reminderAt)
+      if (reminderAt <= new Date()) continue
+      const valid = task.notificationId ? await verifyReminderIdsExist([task.notificationId]) : []
+      if (valid.length) continue
+      const newId = await scheduleTaskReminder(task.id, task.title, reminderAt)
+      if (newId) {
+        await db.update(tasks).set({ notificationId: newId }).where(eq(tasks.id, task.id))
+      }
+    }
+
+    // Reschedule one-time exam reminders that are missing from the OS.
+    const allExams = await db.select().from(exams)
+    for (const exam of allExams) {
+      if (!exam.reminder) continue
+      const valid = exam.reminderId ? await verifyReminderIdsExist([exam.reminderId]) : []
+      if (valid.length) continue
+      const newId = await scheduleExamReminder(exam.id, exam.title, new Date(exam.date), exam.reminder)
+      if (newId) {
+        await db.update(exams).set({ reminderId: newId }).where(eq(exams.id, exam.id))
+      }
+    }
+
     console.log('[notificationService] Rescheduling complete')
   } catch (err) {
     console.error('[notificationService] Error in rescheduleAllReminders:', err)

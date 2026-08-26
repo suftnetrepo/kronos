@@ -1,13 +1,24 @@
 import React, { useState } from "react";
 import { ScrollView, ActivityIndicator, Linking } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Stack, StyledPressable, StyledCard } from "fluent-styles";
 import { Text } from "../../components";
 import { useColors } from "../../constants";
-import { PREMIUM_FEATURES, PREMIUM_PRICING } from "../../constants/premium";
+import { PREMIUM_FEATURES, PREMIUM_PRICING, FREE_LIMITS } from "../../constants/premium";
 import { PREMIUM_FEATURE_ICONS } from "../../constants/icons";
 import { BoltIcon } from "../../icons/ui";
 import { usePremium } from "../../hooks/usePremium";
+
+// Copy shown when Premium was opened because a free-tier limit was hit,
+// keyed by the `reason` route param a caller can pass in. Only "subjects"
+// is wired up today; unrecognised/absent reasons render nothing extra, so
+// Premium opened normally from Settings/More is unaffected.
+const LIMIT_CONTEXT: Record<string, { title: string; body: string }> = {
+  subjects: {
+    title: "Subject limit reached",
+    body: `You can create up to ${FREE_LIMITS.SUBJECTS} subjects on the free plan. Upgrade to Premium for unlimited subjects.`,
+  },
+}
 
 type PlanKey = "MONTHLY" | "YEARLY" | "ONE_TIME";
 
@@ -37,6 +48,8 @@ const FeatureIconCircle: React.FC<{
 export default function PremiumScreen() {
   const Colors = useColors();
   const premium = usePremium();
+  const { reason, returnTo } = useLocalSearchParams<{ reason?: string; returnTo?: string }>();
+  const limitContext = reason ? LIMIT_CONTEXT[reason] : undefined;
 
   const [selected, setSelected] = useState<PlanKey>("YEARLY");
 
@@ -45,7 +58,13 @@ export default function PremiumScreen() {
     if (selected === "MONTHLY") success = await premium.buyMonthly();
     if (selected === "YEARLY") success = await premium.buyYearly();
     if (selected === "ONE_TIME") success = await premium.buyLifetime();
-    if (success) router.back();
+    if (!success) return;
+    // buy*() already awaits refresh() internally, so entitlement is current
+    // by the time we get here. Only resume the flow that sent the user to
+    // Premium when it told us to — a normal Settings/More purchase keeps
+    // the existing back-to-previous-screen behaviour.
+    if (returnTo) router.replace(returnTo as any);
+    else router.back();
   };
 
   // ── Already premium ──────────────────────────────────────────────────────────
@@ -179,6 +198,34 @@ export default function PremiumScreen() {
             Unlock everything. No limits, no ads, no nonsense.
           </Text>
         </Stack>
+
+        {/* ── Contextual reason — only when Premium was opened from a
+              free-limit gate; the generic Settings/More entry point is
+              unaffected since `reason` is absent there. ─────────────── */}
+        {limitContext ? (
+          <Stack
+            horizontal
+            alignItems="flex-start"
+            gap={10}
+            marginHorizontal={20}
+            marginBottom={16}
+            padding={14}
+            borderRadius={16}
+            backgroundColor={Colors.primary + "0D"}
+            borderWidth={1}
+            borderColor={Colors.primary + "26"}
+          >
+            <BoltIcon size={16} color={Colors.primary} strokeWidth={2.2} />
+            <Stack flex={1} gap={2}>
+              <Text variant="subtitle" color={Colors.textPrimary}>
+                {limitContext.title}
+              </Text>
+              <Text variant="bodySmall" color={Colors.textMuted}>
+                {limitContext.body}
+              </Text>
+            </Stack>
+          </Stack>
+        ) : null}
 
         {/* ── Feature list ──────────────────────────────────────────── */}
         <StyledCard

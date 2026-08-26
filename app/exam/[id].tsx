@@ -1,0 +1,1 @@
+import {useLocalSearchParams} from 'expo-router'; import ExamDetailScreen from '../../src/screens/exams/ExamDetailScreen'; export default function Screen(){const {id}=useLocalSearchParams<{id:string}>();return <ExamDetailScreen id={String(id)}/>}

@@ -21,22 +21,22 @@ import {
   loaderService,
   actionSheetService,
 } from "fluent-styles";
-import { Text } from "../../components";
+import { Text, ScreenHeader } from "../../components";
 import { useColors, THEMES, TAB_ROUTES, type TabName } from "../../constants";
 import { THEME_META } from "../../constants/themes";
 import { THEME_ICONS } from "../../constants/icons";
 import type { ThemeKey } from "../../constants";
-import { useThemeStore, useAppStore } from "../../stores";
+import { useThemeStore, useAppStore, useSettingsStore } from "../../stores";
 import { useSettings } from "../../hooks/useSettings";
 import { usePremium } from "../../hooks/usePremium";
 import { PREMIUM_THEMES } from "../../constants/premium";
 import { clearEntitlement } from "../../services/premiumService";
 import { db } from "../../db";
-import { subjects, homework, exams, settings } from "../../db/schema";
+import { subjects } from "../../db/schema";
+import { dataService } from "../../services/dataService";
 import { ShareTimetableContent } from "../timetable/ShareTimetableContent";
 import { ImportTimetableContent } from "../timetable/ImportTimetableContent";
 import {
-  cancelAllReminders,
   forceResyncAllReminders,
 } from "../../services/notificationService";
 import {
@@ -185,11 +185,14 @@ export default function SettingsScreen() {
   }, [invalidateData]);
 
   // ── Clear all data ───────────────────────────────────────────────────────────
+  // Delegates to dataService.resetAll() — the single place that knows about
+  // every user-owned planner table (subjects, tasks, exams, legacy homework,
+  // settings) — rather than deleting rows directly from this screen.
   const handleClearAll = useCallback(async () => {
     const ok = await dialogueService.confirm({
       title: "Clear all data?",
       message:
-        "This will permanently delete all subjects, homework, exams and settings. This cannot be undone.",
+        "This will permanently delete all subjects, tasks, exams and settings. This cannot be undone.",
       icon: "⚠️",
       confirmLabel: "Delete everything",
       destructive: true,
@@ -197,22 +200,13 @@ export default function SettingsScreen() {
     if (!ok) return;
 
     try {
-      await loaderService.wrap(
-        async () => {
-          await cancelAllReminders();
-          await db.delete(exams);
-          await db.delete(homework);
-          await db.delete(subjects);
-          await db.delete(settings);
-          await db.insert(settings).values({
-            id: "singleton",
-            firstDayOfWeek: "MON",
-            defaultTab: "index",
-            updatedAt: new Date(),
-          });
-        },
-        { label: "Clearing…", variant: "spinner" },
-      );
+      await loaderService.wrap(() => dataService.resetAll(), {
+        label: "Clearing…",
+        variant: "spinner",
+      });
+      // Reset in-app UI state that mirrors settings (default tab preference,
+      // any pending startup redirect) back to the fresh defaults just written.
+      await useSettingsStore.getState().hydrate();
       invalidateData();
       toastService.success("All data cleared");
     } catch (err: any) {
@@ -253,27 +247,11 @@ export default function SettingsScreen() {
 
   return (
     <StyledPage flex={1} backgroundColor={Colors.bg}>
-      <StyledPage.Header
-        paddingHorizontal={4}
-        paddingVertical={8}
-        marginHorizontal={16}
-        borderRadius={8}
-        backArrowProps={{ onPress: () => router.back() }}
-        shapeProps={{
-          size: 40,
-          backgroundColor: Colors.bgCard,
-          borderColor: Colors.border,
-          borderWidth: 0.5,
-        }}
-        title="Settings"
-        titleAlignment="left"
-        titleProps={{
-          color: Colors.textPrimary,
-          fontSize : 20,
-          fontWeight: "700",
-          fontFamily: "PlusJakartaSans_700Bold",
-        }}
-      />
+      <Stack paddingHorizontal={20} paddingTop={20}>
+        <Stack marginTop={10}>
+          <ScreenHeader onBack={() => router.back()} title="Settings" centered />
+        </Stack>
+      </Stack>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         {/* ── Premium banner / badge ────────────────────────────────── */}
@@ -525,7 +503,7 @@ export default function SettingsScreen() {
             </Stack>
           </Stack>
 
-          {/* Timetable option */}
+          {/* Today option — stored as 'index', the tab route Today lives on */}
           <StyledPressable
             flexDirection="row"
             alignItems="center"
@@ -543,7 +521,7 @@ export default function SettingsScreen() {
                 variant="subtitle"
                 color={appSettings.defaultTab === 'index' ? Colors.primary : Colors.textPrimary}
               >
-                Timetable
+                Today
               </Text>
             </Stack>
             {appSettings.defaultTab === 'index' && (
@@ -553,7 +531,8 @@ export default function SettingsScreen() {
 
           <StyledDivider height={0.3} borderBottomColor={Colors.border} />
 
-          {/* Homework option */}
+          {/* Homework option — opens Tasks pre-filtered to Homework, since
+              the legacy Homework tab no longer creates reachable records */}
           <StyledPressable
             flexDirection="row"
             alignItems="center"
@@ -562,7 +541,7 @@ export default function SettingsScreen() {
             paddingVertical={14}
             onPress={async () => {
               await appSettings.setDefaultTab('homework')
-              router.replace(TAB_ROUTES.homework)
+              router.replace({ pathname: TAB_ROUTES.tasks, params: { type: 'homework' } } as any)
             }}
             backgroundColor={appSettings.defaultTab === 'homework' ? Colors.primary + '15' : 'transparent'}
           >
@@ -717,6 +696,64 @@ export default function SettingsScreen() {
               </StyledPressable>
             </>
           )}
+        </StyledCard>
+
+        {/* ── Security ──────────────────────────────────────────────── */}
+        {/* Entry point only — PIN/biometric lock is schema-ready
+            (settings.lockEnabled/biometricEnabled) but the interactive setup
+            flow is intentionally deferred to its own screen-design phase. */}
+        <SectionHeader label="Security" />
+        <StyledCard
+          shadow="light"
+          marginHorizontal={16}
+          borderRadius={16}
+          backgroundColor={Colors.bgCard}
+          borderWidth={1}
+          borderColor={Colors.border}
+          overflow="hidden"
+        >
+          <StyledPressable
+            flexDirection="row"
+            alignItems="center"
+            gap={14}
+            paddingHorizontal={20}
+            paddingVertical={14}
+            onPress={() =>
+              toastService.info(
+                "App lock coming soon",
+                "PIN and biometric protection are on the way",
+              )
+            }
+          >
+            <Stack
+              width={36}
+              height={36}
+              borderRadius={10}
+              backgroundColor={Colors.primary + "15"}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <LockIcon size={18} color={Colors.primary} strokeWidth={2} />
+            </Stack>
+            <Stack flex={1} gap={2}>
+              <Text variant="subtitle" color={Colors.textPrimary}>
+                App lock
+              </Text>
+              <Text variant="bodySmall" color={Colors.textMuted}>
+                PIN and biometric protection
+              </Text>
+            </Stack>
+            <Stack
+              paddingHorizontal={9}
+              paddingVertical={4}
+              borderRadius={10}
+              backgroundColor={Colors.bgMuted}
+            >
+              <Text variant="caption" fontWeight="700" color={Colors.textMuted}>
+                SOON
+              </Text>
+            </Stack>
+          </StyledPressable>
         </StyledCard>
 
         {/* ── About ─────────────────────────────────────────────────── */}

@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { ScrollView } from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import {
   Stack,
   StyledText,
@@ -215,6 +215,11 @@ export default function ExamsScreen() {
   const [editExam, setEditExam] = useState<Exam | null>(null);
   const [showPast, setShowPast] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
+  const params = useLocalSearchParams<{ add?: string }>();
+
+  useEffect(() => {
+    if (params.add === '1') setShowAdd(true);
+  }, [params.add]);
 
   useFocusEffect(
     useCallback(() => {
@@ -250,38 +255,25 @@ export default function ExamsScreen() {
 
   return (
     <StyledPage backgroundColor={Colors.bg}>
-      <StyledPage.Header
-        paddingHorizontal={4}
-        marginHorizontal={16}
-        borderRadius={30}
-        paddingRight={8}
-    
-        backArrowProps={{ onPress: () => router.back() }}
-        shapeProps={{
-          size: 40,
-          backgroundColor: Colors.bgCard,
-          borderColor: Colors.border,
-          borderWidth: 0.5,
-        }}
-        title="Exams"
-        titleAlignment="left"
-        titleProps={{
-          color: Colors.textPrimary,
-          fontSize : 20,
-          fontWeight: "700",
-          fontFamily: "PlusJakartaSans_700Bold",
-        }}
-        rightIcon={
-          past.length > 0 ? (
+      {/* Exams is a tab root, not a pushed screen — no back button (see the
+          header consolidation: root screens use this inline-title pattern,
+          the same one Today/Tasks use, rather than a back-navigation header). */}
+      <Stack paddingHorizontal={16} paddingTop={24} paddingBottom={8}>
+        <Stack flexDirection="row" alignItems="flex-end" justifyContent="space-between">
+          <Stack>
+            <Text variant="display" fontSize={29} lineHeight={36} color={Colors.textPrimary}>Exams</Text>
+            <Text variant="bodySmall" color={Colors.textSecondary}>Upcoming and past assessments.</Text>
+          </Stack>
+          {past.length > 0 ? (
             <StyledPressable onPress={() => setShowPast((v) => !v)}>
-              <Text variant="label" color={Colors.primary}>
+              <Text variant="label" fontWeight="700" color={Colors.primary}>
                 {showPast ? "Hide past" : "Show past"}
               </Text>
             </StyledPressable>
-          ) : undefined
-        }
-      />
-      <Stack marginTop={8} flex={1} backgroundColor={Colors.bg}>
+          ) : null}
+        </Stack>
+      </Stack>
+      <Stack flex={1} backgroundColor={Colors.bg}>
         {/* Body */}
         {loading ? (
           <Stack padding={16}>
@@ -299,7 +291,7 @@ export default function ExamsScreen() {
           <ScrollView
             contentContainerStyle={{
               paddingHorizontal: 16,
-              paddingBottom: 140,
+              paddingBottom: 190,
             }}
           >
             {/* ── Upcoming ───────────────────────────────────────────── */}
@@ -323,7 +315,7 @@ export default function ExamsScreen() {
                           subjectName={sub.name}
                           subjectColor={sub.color}
                           isPast={false}
-                          onPress={setEditExam}
+                          onPress={(exam) => router.push({ pathname: '/exam/[id]', params: { id: exam.id } } as any)}
                           onDelete={handleDelete}
                           openSwipeId={openSwipeId}
                           onSwipeOpen={setOpenSwipeId}
@@ -380,7 +372,7 @@ export default function ExamsScreen() {
                           subjectName={sub.name}
                           subjectColor={sub.color}
                           isPast
-                          onPress={setEditExam}
+                          onPress={(exam) => router.push({ pathname: '/exam/[id]', params: { id: exam.id } } as any)}
                           onDelete={handleDelete}
                           openSwipeId={openSwipeId}
                           onSwipeOpen={setOpenSwipeId}

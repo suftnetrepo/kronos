@@ -10,6 +10,7 @@ import {
 } from "fluent-styles";
 import { toastService, loaderService, dialogueService } from "fluent-styles";
 import { Text } from "../../components/text";
+import { ModalFormHeader } from "../../components/ModalFormHeader";
 import { useColors } from "../../constants";
 import { REMINDER_OPTIONS, SUBJECT_COLORS } from "../../constants";
 import { DAYS, DAY_LABELS } from "../../db/schema";
@@ -243,29 +244,12 @@ export function EditSubjectSheet({
           </Stack>
 
           {/* Header */}
-          <Stack
-            flexDirection="row"
-            alignItems="center"
-            justifyContent="space-between"
-            paddingHorizontal={20}
-            paddingVertical={14}
-            borderBottomWidth={1}
-            borderBottomColor={Colors.border}
-          >
-            <StyledPressable onPress={onClose}>
-              <Text variant="button" color={Colors.textMuted}>
-                Cancel
-              </Text>
-            </StyledPressable>
-            <Text variant="title" color={Colors.textPrimary}>
-              Edit Subject
-            </Text>
-            <StyledPressable onPress={handleSave} disabled={!isValid}>
-              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>
-                Save
-              </Text>
-            </StyledPressable>
-          </Stack>
+          <ModalFormHeader
+            title="Edit Subject"
+            onCancel={onClose}
+            onSave={handleSave}
+            saveDisabled={!isValid}
+          />
 
           <ScrollView
             showsVerticalScrollIndicator={false}

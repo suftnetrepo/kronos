@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { ScrollView, Modal } from "react-native";
+import { router } from "expo-router";
 import {
   Stack,
   StyledPressable,
@@ -10,6 +11,7 @@ import {
 } from "fluent-styles";
 import { toastService, loaderService } from "fluent-styles";
 import { Text } from "../../components/text";
+import { ModalFormHeader } from "../../components/ModalFormHeader";
 import { useColors } from "../../constants";
 import { REMINDER_OPTIONS, SUBJECT_COLORS } from "../../constants";
 import { DAYS, DAY_LABELS } from "../../db/schema";
@@ -118,8 +120,13 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
         `Upgrade to Premium to add more than ${premium.limits.SUBJECTS} subjects`,
       );
       onClose();
-      const { router } = require("expo-router");
-      router.push("/premium");
+      // Contextual paywall: reason drives the "why am I here" copy on the
+      // Premium screen, returnTo lets it reopen this exact flow after a
+      // successful upgrade instead of dropping the user back on Today.
+      router.push({
+        pathname: "/premium",
+        params: { reason: "subjects", returnTo: "/add-subject" },
+      } as any);
       return;
     }
 
@@ -198,34 +205,12 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
           </Stack>
 
           {/* Header */}
-          <Stack
-            flexDirection="row"
-            alignItems="center"
-            justifyContent="space-between"
-            paddingHorizontal={20}
-            paddingVertical={14}
-            borderBottomWidth={1}
-            borderBottomColor={Colors.border}
-          >
-            <StyledPressable
-              onPress={() => {
-                reset();
-                onClose();
-              }}
-            >
-              <Text variant="button" color={Colors.textMuted}>
-                Cancel
-              </Text>
-            </StyledPressable>
-            <Text variant="title" color={Colors.textPrimary}>
-              Add Subject
-            </Text>
-            <StyledPressable onPress={handleSave} disabled={!isValid}>
-              <Text variant="button" color={isValid ? Colors.primary : Colors.textMuted}>
-                Save
-              </Text>
-            </StyledPressable>
-          </Stack>
+          <ModalFormHeader
+            title="Add Subject"
+            onCancel={() => { reset(); onClose(); }}
+            onSave={handleSave}
+            saveDisabled={!isValid}
+          />
 
           <ScrollView
             showsVerticalScrollIndicator={false}
