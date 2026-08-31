@@ -8,7 +8,9 @@ import {
   StyledDivider,
   Switch,
   StyledForm,
-  Popup,
+  StyledPage,
+  StyledDropdown,
+  DropdownOptionItem,
 } from "fluent-styles";
 import { toastService, loaderService } from "fluent-styles";
 import { Text } from "../../components/text";
@@ -26,21 +28,25 @@ import {
 } from "../../services/notificationService";
 import type { Day } from "../../db/schema";
 
-interface AddSubjectSheetProps {
-  visible: boolean;
-  onClose: () => void;
-}
+const TIME_OPTIONS: DropdownOptionItem[] = Array.from(
+  { length: 24 * 4 },
+  (_, i) => {
+    const h = Math.floor(i / 4);
+    const m = (i % 4) * 15;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  },
+)
+  .filter((t) => {
+    const [h] = t.split(":").map(Number);
+    return h >= 6 && h <= 22;
+  })
+  .map((t) => ({ value: t, label: t }));
 
-const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
-  const h = Math.floor(i / 4);
-  const m = (i % 4) * 15;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}).filter((t) => {
-  const [h] = t.split(":").map(Number);
-  return h >= 6 && h <= 22;
-});
-
-export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
+// A real full screen (pushed via router), not a Popup/Modal — see
+// AddExamSheet for why: a transparent RN Modal + a focused TextInput has a
+// real-device-only keyboard/rendering bug that a plain screen sidesteps
+// entirely.
+export function AddSubjectSheet() {
   const Colors = useColors();
   const { create, data: allSubjects } = useSubjects();
   const { selectedDay } = useAppStore();
@@ -56,32 +62,24 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
   const [endTime, setEndTime] = useState("10:00");
   const [reminder, setReminder] = useState<number | null>(null);
   const [reminderOn, setReminderOn] = useState(false);
-  const [showStart, setShowStart] = useState(false);
-  const [showEnd, setShowEnd] = useState(false);
   const [touched, setTouched] = useState({ name: false });
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   // Validation
-  const nameError = (touched.name || attemptedSubmit) && !name.trim() ? "Subject name is required" : null;
-  const daysError = (attemptedSubmit && selectedDays.length === 0) ? "Choose at least one day" : null;
+  const nameError =
+    (touched.name || attemptedSubmit) && !name.trim()
+      ? "Subject name is required"
+      : null;
+  const daysError =
+    attemptedSubmit && selectedDays.length === 0
+      ? "Choose at least one day"
+      : null;
   const timeError =
-    attemptedSubmit && startTime >= endTime ? "End time must be after start time" : null;
+    attemptedSubmit && startTime >= endTime
+      ? "End time must be after start time"
+      : null;
   const isValid =
     !!name.trim() && selectedDays.length > 0 && startTime < endTime;
-
-  const reset = () => {
-    setName("");
-    setTeacher("");
-    setRoom("");
-    setColor(SUBJECT_COLORS[0]);
-    setSelectedDays([selectedDay as Day]);
-    setStartTime("09:00");
-    setEndTime("10:00");
-    setReminder(null);
-    setReminderOn(false);
-    setTouched({ name: false });
-    setAttemptedSubmit(false);
-  };
 
   const toggleDay = (day: Day) => {
     setSelectedDays((prev) =>
@@ -119,7 +117,7 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
         `Free limit reached`,
         `Upgrade to Premium to add more than ${premium.limits.SUBJECTS} subjects`,
       );
-      onClose();
+      router.back();
       // Contextual paywall: reason drives the "why am I here" copy on the
       // Premium screen, returnTo lets it reopen this exact flow after a
       // successful upgrade instead of dropping the user back on Today.
@@ -152,8 +150,7 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
         }
       }
       toastService.success("Subject added!");
-      reset();
-      onClose();
+      router.back();
     } catch (err: any) {
       toastService.error("Failed to save", err?.message);
     } finally {
@@ -173,25 +170,20 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
     reminder,
     reminderOn,
     create,
-    onClose,
   ]);
 
   return (
-    <Popup
-      visible={visible}
-      onClose={() => { reset(); onClose(); }}
-      overlayColor="rgba(0,0,0,0.45)"
-      roundRadius={28}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "92%" }}
-    >
+    <StyledPage showStatusBar backgroundColor={Colors.bg}>
       {/* Header */}
-      <ModalFormHeader
-        title="Add Subject"
-        onCancel={() => { reset(); onClose(); }}
-        onSave={handleSave}
-        saveDisabled={!isValid}
-      />
+
+      <StyledPage.Header.Full>
+        <ModalFormHeader
+          title="New Course"
+          onCancel={() => router.back()}
+          onSave={handleSave}
+          saveDisabled={!isValid}
+        />
+      </StyledPage.Header.Full>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -200,7 +192,7 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
         {/* Subject name */}
         <Stack gap={6} marginBottom={16}>
           <Text variant="overline" color={Colors.textMuted}>
-            SUBJECT NAME *
+            NAME *
           </Text>
           <StyledTextInput
             variant="filled"
@@ -223,10 +215,10 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
 
         <StyledForm>
           {/* Teacher + Room row */}
-          <Stack flexDirection="row" gap={12} marginBottom={16}>
+          <Stack flexDirection="row" gap={12}>
             <Stack flex={1} gap={6}>
               <Text variant="overline" color={Colors.textMuted}>
-                TEACHER
+                Lecturer
               </Text>
               <StyledTextInput
                 variant="filled"
@@ -253,7 +245,7 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
           </Stack>
 
           {/* Days selector */}
-          <Stack gap={8} marginBottom={16}>
+          <Stack gap={8}>
             <Text variant="overline" color={Colors.textMuted}>
               REPEAT ON *
             </Text>
@@ -290,50 +282,31 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
           </Stack>
 
           {/* Time row */}
-          <Stack gap={8} marginBottom={16}>
-            <Text variant="overline" color={Colors.textMuted}>
-              TIME *
-            </Text>
-            <Stack flexDirection="row" gap={12}>
-              {/* Start time */}
-              <StyledPressable
-                flex={1}
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-                paddingHorizontal={14}
-                paddingVertical={14}
-                borderRadius={12}
-                backgroundColor={Colors.bgInput}
-                onPress={() => setShowStart(true)}
-              >
-                <Text variant="label" color={Colors.textMuted}>
-                  From
-                </Text>
-                <Text variant="title" color={Colors.textPrimary}>
-                  {startTime}
-                </Text>
-              </StyledPressable>
-              {/* End time */}
-              <StyledPressable
-                flex={1}
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-                paddingHorizontal={14}
-                paddingVertical={14}
-                borderRadius={12}
-                backgroundColor={Colors.bgInput}
-                onPress={() => setShowEnd(true)}
-              >
-                <Text variant="label" color={Colors.textMuted}>
-                  To
-                </Text>
-                <Text variant="title" color={Colors.textPrimary}>
-                  {endTime}
-                </Text>
-              </StyledPressable>
-            </Stack>
+
+          <Stack
+            horizontal
+            justifyContent="space-between"
+            alignItems="center"
+            gap={8}
+          >
+            <StyledDropdown
+              placeholderTextColor={Colors.textMuted}
+              value={startTime}
+              placeholder="Select a start time"
+              data={TIME_OPTIONS}
+              onChange={(j) => setStartTime(j.value)}
+              flex={1}
+            />
+            <StyledDropdown
+              placeholderTextColor={Colors.textMuted}
+              value={endTime}
+              placeholder="Select an end time"
+              data={TIME_OPTIONS}
+              onChange={(j) => setEndTime(j.value)}
+              flex={1}
+            />
+          </Stack>
+          <Stack horizontal justifyContent="flex-start" alignItems="center">
             {timeError ? (
               <Text variant="caption" color={Colors.error}>
                 {timeError}
@@ -342,9 +315,9 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
           </Stack>
 
           {/* Colour picker */}
-          <Stack gap={8} marginBottom={16}>
+          <Stack gap={8}>
             <Text variant="overline" color={Colors.textMuted}>
-              COLOUR
+              Colour
             </Text>
             <Stack flexDirection="row" flexWrap="wrap" gap={10}>
               {SUBJECT_COLORS.map((c) => (
@@ -381,10 +354,7 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
           </Stack>
 
           {/* Reminder toggle */}
-          <StyledDivider
-            borderBottomColor={Colors.border}
-            marginBottom={16}
-          />
+          <StyledDivider borderBottomColor={Colors.border} marginBottom={16} />
           <Stack
             flexDirection="row"
             alignItems="center"
@@ -413,138 +383,36 @@ export function AddSubjectSheet({ visible, onClose }: AddSubjectSheetProps) {
                 NOTIFY ME
               </Text>
               <Stack flexDirection="row" flexWrap="wrap" gap={8}>
-                {REMINDER_OPTIONS.filter((o) => o.value !== null).map(
-                  (opt) => {
-                    const active = reminder === opt.value;
-                    return (
-                      <StyledPressable
-                        key={opt.value}
-                        paddingHorizontal={14}
-                        paddingVertical={9}
-                        borderRadius={12}
-                        borderWidth={2}
-                        borderColor={
-                          active ? Colors.primary : Colors.border
-                        }
-                        backgroundColor={
-                          active ? Colors.primary + "15" : Colors.bgCard
-                        }
-                        onPress={() => setReminder(opt.value as number)}
+                {REMINDER_OPTIONS.filter((o) => o.value !== null).map((opt) => {
+                  const active = reminder === opt.value;
+                  return (
+                    <StyledPressable
+                      key={opt.value}
+                      paddingHorizontal={14}
+                      paddingVertical={9}
+                      borderRadius={12}
+                      borderWidth={2}
+                      borderColor={active ? Colors.primary : Colors.border}
+                      backgroundColor={
+                        active ? Colors.primary + "15" : Colors.bgCard
+                      }
+                      onPress={() => setReminder(opt.value as number)}
+                    >
+                      <Text
+                        variant="button"
+                        fontSize={13}
+                        color={active ? Colors.primary : Colors.textMuted}
                       >
-                        <Text
-                          variant="button"
-                          fontSize={13}
-                          color={active ? Colors.primary : Colors.textMuted}
-                        >
-                          {opt.label}
-                        </Text>
-                      </StyledPressable>
-                    );
-                  },
-                )}
+                        {opt.label}
+                      </Text>
+                    </StyledPressable>
+                  );
+                })}
               </Stack>
             </Stack>
           )}
         </StyledForm>
       </ScrollView>
-
-      {/* Time picker popups */}
-      <TimePicker
-        visible={showStart}
-        value={startTime}
-        onSelect={(t) => {
-          setStartTime(t);
-          setShowStart(false);
-        }}
-        onClose={() => setShowStart(false)}
-        title="Start time"
-      />
-      <TimePicker
-        visible={showEnd}
-        value={endTime}
-        onSelect={(t) => {
-          setEndTime(t);
-          setShowEnd(false);
-        }}
-        onClose={() => setShowEnd(false)}
-        title="End time"
-      />
-    </Popup>
-  );
-}
-
-// ─── Simple time picker ───────────────────────────────────────────────────────
-function TimePicker({
-  visible,
-  value,
-  onSelect,
-  onClose,
-  title,
-}: {
-  visible: boolean;
-  value: string;
-  onSelect: (t: string) => void;
-  onClose: () => void;
-  title: string;
-}) {
-  const Colors = useColors();
-  return (
-    <Popup
-      visible={visible}
-      onClose={onClose}
-      overlayColor="rgba(0,0,0,0.5)"
-      roundRadius={24}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "60%" }}
-    >
-      <Stack
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="space-between"
-        paddingHorizontal={20}
-        paddingVertical={14}
-        borderBottomWidth={1}
-        borderBottomColor={Colors.border}
-      >
-        <StyledPressable onPress={onClose}>
-          <Text variant="button" color={Colors.textMuted}>
-            Cancel
-          </Text>
-        </StyledPressable>
-        <Text variant="title" color={Colors.textPrimary}>
-          {title}
-        </Text>
-        <Stack width={60} />
-      </Stack>
-      <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
-        {TIME_OPTIONS.map((t) => (
-          <StyledPressable
-            key={t}
-            flexDirection="row"
-            alignItems="center"
-            justifyContent="space-between"
-            paddingHorizontal={20}
-            paddingVertical={14}
-            backgroundColor={
-              t === value ? Colors.primary + "12" : "transparent"
-            }
-            onPress={() => onSelect(t)}
-          >
-            <Text
-              variant="metric"
-              fontSize={17}
-              color={t === value ? Colors.primary : Colors.textPrimary}
-            >
-              {t}
-            </Text>
-            {t === value && (
-              <Text variant="button" color={Colors.primary}>
-                ✓
-              </Text>
-            )}
-          </StyledPressable>
-        ))}
-      </ScrollView>
-    </Popup>
+    </StyledPage>
   );
 }

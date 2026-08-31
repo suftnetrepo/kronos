@@ -7,7 +7,7 @@ import { useColors } from '../../constants'
 import { useSubjects } from '../../hooks/useSubjects'
 import { useAppStore } from '../../stores'
 import { DAYS, DAY_LABELS, DAY_FULL, type Day, type Subject } from '../../db/schema'
-import { SubjectCard } from './HomeScreen'
+import { SubjectCard } from './SubjectCard'
 
 // The embedded "Timetable" pane of the Home planning hub. This intentionally
 // reuses the *original* day-by-day timetable data model (useAppStore's

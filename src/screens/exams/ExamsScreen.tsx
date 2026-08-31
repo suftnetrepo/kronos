@@ -22,8 +22,6 @@ import { useSubjects } from "../../hooks";
 import { Text, SwipeDeleteAction } from "../../components";
 import { FLOATING_TAB_BAR_HEIGHT } from "../../components/FloatingTabBar";
 import type { Exam } from "../../db/schema";
-import { AddExamSheet } from "./AddExamSheet";
-import { EditExamSheet } from "./EditExamSheet";
 
 // ─── Countdown badge helpers ───────────────────────────────────────────────────
 function countdownLabel(
@@ -219,14 +217,12 @@ export default function ExamsScreen() {
   } = useExams();
   const { data: subjects } = useSubjects();
 
-  const [showAdd, setShowAdd] = useState(false);
-  const [editExam, setEditExam] = useState<Exam | null>(null);
   const [showPast, setShowPast] = useState(false);
   const [openSwipeId, setOpenSwipeId] = useState<string | null>(null);
   const params = useLocalSearchParams<{ add?: string }>();
 
   useEffect(() => {
-    if (params.add === "1") setShowAdd(true);
+    if (params.add === "1") router.push("/add-exam" as any);
   }, [params.add]);
 
   useFocusEffect(
@@ -279,16 +275,14 @@ export default function ExamsScreen() {
           >
             <Stack>
               <Text
-                variant="display"
+                variant="title"
                 fontSize={29}
                 lineHeight={36}
                 color={Colors.textPrimary}
               >
                 Exams
               </Text>
-              <Text variant="bodySmall" color={Colors.textSecondary}>
-                Upcoming and past assessments.
-              </Text>
+         
             </Stack>
             {past.length > 0 ? (
               <StyledPressable onPress={() => setShowPast((v) => !v)}>
@@ -439,7 +433,7 @@ export default function ExamsScreen() {
           backgroundColor={Colors.primary}
           alignItems="center"
           justifyContent="center"
-          onPress={() => setShowAdd(true)}
+          onPress={() => router.push("/add-exam" as any)}
           style={{
             shadowColor: Colors.primaryDark,
             shadowOffset: { width: 0, height: 6 },
@@ -456,23 +450,6 @@ export default function ExamsScreen() {
             +
           </StyledText>
         </StyledPressable>
-
-        <AddExamSheet
-          visible={showAdd}
-          onClose={() => {
-            setShowAdd(false);
-            refetch();
-          }}
-        />
-
-        <EditExamSheet
-          exam={editExam}
-          visible={editExam !== null}
-          onClose={() => {
-            setEditExam(null);
-            refetch();
-          }}
-        />
       </Stack>
     </StyledPage>
   );

@@ -19,7 +19,6 @@ import { useColors } from "../../constants";
 import { useHomework, useSubjects } from "../../hooks";
 import { Text } from "../../components";
 import type { Homework } from "../../db/schema";
-import { AddHomeworkSheet } from "./AddHomeworkSheet";
 
 function dueDateLabel(
   date: Date,
@@ -119,7 +118,6 @@ export default function HomeworkScreen() {
   } = useHomework();
   const { data: subjects } = useSubjects();
   const [showDone, setShowDone] = useState(false);
-  const [showAdd, setShowAdd] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -289,7 +287,7 @@ export default function HomeworkScreen() {
           backgroundColor={Colors.primary}
           alignItems="center"
           justifyContent="center"
-          onPress={() => setShowAdd(true)}
+          onPress={() => router.push('/homework/add' as any)}
           style={{
             shadowColor: Colors.primaryDark,
             shadowOffset: { width: 0, height: 6 },
@@ -306,14 +304,6 @@ export default function HomeworkScreen() {
             +
           </StyledText>
         </StyledPressable>
-
-        <AddHomeworkSheet
-          visible={showAdd}
-          onClose={() => {
-            setShowAdd(false);
-            refetch();
-          }}
-        />
       </Stack>
     </StyledPage>
   );

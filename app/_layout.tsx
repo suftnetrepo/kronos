@@ -26,7 +26,7 @@ function RootLayoutNav() {
       <Stack.Screen
         name="add-subject"
         options={{
-          presentation: "transparentModal",
+   
           headerShown: false,
           animation: "slide_from_bottom",
         }}
@@ -34,7 +34,7 @@ function RootLayoutNav() {
       <Stack.Screen
         name="edit-subject"
         options={{
-          presentation: "transparentModal",
+        
           headerShown: false,
           animation: "slide_from_bottom",
         }}
@@ -42,7 +42,7 @@ function RootLayoutNav() {
       <Stack.Screen
         name="add-homework"
         options={{
-          presentation: "transparentModal",
+        
           headerShown: false,
           animation: "slide_from_bottom",
         }}

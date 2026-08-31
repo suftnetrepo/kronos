@@ -16,7 +16,6 @@ import { Text, PremiumIcon, ScreenHeader } from "../../components";
 import { IconTile } from "../tasks/TaskDetailScreen";
 import { TrashIcon } from "../../icons/ui";
 import { useAppStore } from "../../stores";
-import { EditExamSheet } from "./EditExamSheet";
 import { useColors } from "../../constants";
 import { examService } from "../../services/examService";
 import { subjectService } from "../../services/subjectService";
@@ -37,7 +36,6 @@ const formatTaskDue = (d: Date) =>
 export default function ExamDetailScreen({ id }: { id: string }) {
   const C = useColors();
   const invalidate = useAppStore((s) => s.invalidateData);
-  const [showEdit, setShowEdit] = useState(false);
   const [exam, setExam] = useState<Exam | null>(null);
   const [subject, setSubject] = useState<Subject | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -126,7 +124,7 @@ export default function ExamDetailScreen({ id }: { id: string }) {
             borderRadius={16}
             alignItems="center"
             justifyContent="center"
-            onPress={() => setShowEdit(true)}
+            onPress={() => router.push({ pathname: "/edit-exam", params: { id } } as any)}
           >
             <StyledText fontSize={16}>Edit</StyledText>
           </StyledPressable>
@@ -516,16 +514,6 @@ export default function ExamDetailScreen({ id }: { id: string }) {
           </Stack>
         </StyledPressable>
       </ScrollView>
-
-      <EditExamSheet
-        exam={exam}
-        visible={showEdit}
-        onClose={() => {
-          setShowEdit(false);
-          invalidate();
-          load();
-        }}
-      />
     </StyledPage>
   );
 }

@@ -213,8 +213,14 @@ export default function TodayScreen({ embedded = false, onViewTimetable }: Props
           ))}
         </Stack>
       ) : (
-        <Stack paddingVertical={14} marginBottom={22}>
-          <Text variant="bodySmall" color={C.textMuted}>Nothing scheduled today.</Text>
+        <Stack flexDirection="row" alignItems="center" padding={14} borderRadius={16} backgroundColor={C.bgCard} borderWidth={1} borderColor={C.border} marginBottom={22}>
+          <Stack width={34} height={34} borderRadius={12} backgroundColor={C.primary + '12'} alignItems="center" justifyContent="center">
+            <PremiumIcon name="calendar" size={17} color={C.primary} />
+          </Stack>
+          <Stack marginLeft={11}>
+            <Text variant="label" color={C.textPrimary}>Free day, no classes</Text>
+            <Text variant="caption" color={C.textSecondary}>Enjoy the break, or check your timetable.</Text>
+          </Stack>
         </Stack>
       )}
 

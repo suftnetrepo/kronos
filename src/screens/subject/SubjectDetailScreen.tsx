@@ -332,7 +332,7 @@ export default function SubjectDetailScreen({ id }: { id: string }) {
                   backgroundColor={C.bgMuted}
                 >
                   <Text fontSize={9} fontWeight="700" color={C.textSecondary}>
-                    {subject.room}
+                   {subject.room}
                   </Text>
                 </Stack>
               ) : null}

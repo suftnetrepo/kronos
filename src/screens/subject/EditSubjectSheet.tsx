@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ScrollView } from "react-native";
+import { router } from "expo-router";
 import {
   Stack,
   StyledPressable,
@@ -7,7 +8,9 @@ import {
   StyledDivider,
   Switch,
   StyledForm,
-  Popup,
+  StyledPage,
+  DropdownOptionItem,
+  StyledDropdown,
 } from "fluent-styles";
 import { toastService, loaderService, dialogueService } from "fluent-styles";
 import { Text } from "../../components/text";
@@ -29,26 +32,26 @@ import type { Day } from "../../db/schema";
 
 interface EditSubjectSheetProps {
   subjectId: string;
-  visible: boolean;
-  onClose: () => void;
-  onDeleted: () => void;
 }
 
-const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
-  const h = Math.floor(i / 4);
-  const m = (i % 4) * 15;
-  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
-}).filter((t) => {
-  const [h] = t.split(":").map(Number);
-  return h >= 6 && h <= 22;
-});
-
-export function EditSubjectSheet({
-  subjectId,
-  visible,
-  onClose,
-  onDeleted,
-}: EditSubjectSheetProps) {
+const TIME_OPTIONS: DropdownOptionItem[] = Array.from(
+  { length: 24 * 4 },
+  (_, i) => {
+    const h = Math.floor(i / 4);
+    const m = (i % 4) * 15;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  },
+)
+  .filter((t) => {
+    const [h] = t.split(":").map(Number);
+    return h >= 6 && h <= 22;
+  })
+  .map((t) => ({ value: t, label: t }));
+// A real full screen (pushed via router), not a Popup/Modal — see
+// AddExamSheet for why: a transparent RN Modal + a focused TextInput has a
+// real-device-only keyboard/rendering bug that a plain screen sidesteps
+// entirely.
+export function EditSubjectSheet({ subjectId }: EditSubjectSheetProps) {
   const Colors = useColors();
   const { update, remove } = useSubjects();
   const { invalidateData } = useAppStore();
@@ -64,22 +67,28 @@ export function EditSubjectSheet({
   const [endTime, setEndTime] = useState("10:00");
   const [reminder, setReminder] = useState<number | null>(null);
   const [reminderOn, setReminderOn] = useState(false);
-  const [showStart, setShowStart] = useState(false);
-  const [showEnd, setShowEnd] = useState(false);
   const [touched, setTouched] = useState({ name: false });
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   // Validation
-  const nameError = (touched.name || attemptedSubmit) && !name.trim() ? "Subject name is required" : null;
-  const daysError = (attemptedSubmit && selectedDays.length === 0) ? "Choose at least one day" : null;
+  const nameError =
+    (touched.name || attemptedSubmit) && !name.trim()
+      ? "Subject name is required"
+      : null;
+  const daysError =
+    attemptedSubmit && selectedDays.length === 0
+      ? "Choose at least one day"
+      : null;
   const timeError =
-    attemptedSubmit && startTime >= endTime ? "End time must be after start time" : null;
+    attemptedSubmit && startTime >= endTime
+      ? "End time must be after start time"
+      : null;
   const isValid =
     !!name.trim() && selectedDays.length > 0 && startTime < endTime;
 
-  // Load subject data when sheet opens
+  // Load subject data on mount
   useEffect(() => {
-    if (!visible || !subjectId) return;
+    if (!subjectId) return;
     subjectService.getById(subjectId).then((s) => {
       if (!s) return;
       setName(s.name);
@@ -95,7 +104,7 @@ export function EditSubjectSheet({
       setAttemptedSubmit(false);
       setLoaded(true);
     });
-  }, [visible, subjectId]);
+  }, [subjectId]);
 
   const toggleDay = (day: Day) => {
     setSelectedDays((prev) =>
@@ -161,7 +170,7 @@ export function EditSubjectSheet({
 
       invalidateData();
       toastService.success("Subject updated!");
-      onClose();
+      router.back();
     } catch (err: any) {
       toastService.error("Failed to save", err?.message);
     } finally {
@@ -181,7 +190,6 @@ export function EditSubjectSheet({
     subjectId,
     update,
     invalidateData,
-    onClose,
   ]);
 
   const handleDelete = useCallback(async () => {
@@ -206,32 +214,27 @@ export function EditSubjectSheet({
 
       await remove(subjectId);
       toastService.success("Subject deleted");
-      onDeleted();
+      router.back();
     } catch (err: any) {
       toastService.error("Failed to delete", err?.message);
     } finally {
       loaderService.hide(loadId);
     }
-  }, [subjectId, remove, onDeleted]);
+  }, [subjectId, remove]);
 
   if (!loaded) return null;
 
   return (
-    <Popup
-      visible={visible}
-      onClose={onClose}
-      overlayColor="rgba(0,0,0,0.45)"
-      roundRadius={28}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "92%" }}
-    >
+    <StyledPage showStatusBar backgroundColor={Colors.bg}>
       {/* Header */}
-      <ModalFormHeader
-        title="Edit Subject"
-        onCancel={onClose}
-        onSave={handleSave}
-        saveDisabled={!isValid}
-      />
+      <StyledPage.Header.Full>
+        <ModalFormHeader
+          title="Edit Course"
+          onCancel={() => router.back()}
+          onSave={handleSave}
+          saveDisabled={!isValid}
+        />
+      </StyledPage.Header.Full>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -241,7 +244,7 @@ export function EditSubjectSheet({
           {/* Subject name */}
           <Stack gap={6} marginBottom={16}>
             <Text variant="overline" color={Colors.textMuted}>
-              SUBJECT NAME *
+              Course*
             </Text>
             <StyledTextInput
               variant="filled"
@@ -265,7 +268,7 @@ export function EditSubjectSheet({
           <Stack flexDirection="row" gap={12} marginBottom={16}>
             <Stack flex={1} gap={6}>
               <Text variant="overline" color={Colors.textMuted}>
-                TEACHER
+                Lecturer
               </Text>
               <StyledTextInput
                 variant="filled"
@@ -328,49 +331,31 @@ export function EditSubjectSheet({
             ) : null}
           </Stack>
 
-          {/* Time */}
-          <Stack gap={8} marginBottom={16}>
-            <Text variant="overline" color={Colors.textMuted}>
-              TIME *
-            </Text>
-            <Stack flexDirection="row" gap={12}>
-              <StyledPressable
-                flex={1}
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-                paddingHorizontal={14}
-                paddingVertical={14}
-                borderRadius={12}
-                backgroundColor={Colors.bgInput}
-                onPress={() => setShowStart(true)}
-              >
-                <Text variant="label" color={Colors.textMuted}>
-                  From
-                </Text>
-                <Text variant="title" color={Colors.textPrimary}>
-                  {startTime}
-                </Text>
-              </StyledPressable>
-              <StyledPressable
-                flex={1}
-                flexDirection="row"
-                alignItems="center"
-                justifyContent="space-between"
-                paddingHorizontal={14}
-                paddingVertical={14}
-                borderRadius={12}
-                backgroundColor={Colors.bgInput}
-                onPress={() => setShowEnd(true)}
-              >
-                <Text variant="label" color={Colors.textMuted}>
-                  To
-                </Text>
-                <Text variant="title" color={Colors.textPrimary}>
-                  {endTime}
-                </Text>
-              </StyledPressable>
-            </Stack>
+          {/* Time row */}
+          <Stack
+            horizontal
+            justifyContent="space-between"
+            alignItems="center"
+            gap={8}
+          >
+            <StyledDropdown
+              placeholderTextColor={Colors.textMuted}
+              value={startTime}
+              placeholder="Select a start time"
+              data={TIME_OPTIONS}
+              onChange={(j) => setStartTime(j.value)}
+              flex={1}
+            />
+            <StyledDropdown
+              placeholderTextColor={Colors.textMuted}
+              value={endTime}
+              placeholder="Select an end time"
+              data={TIME_OPTIONS}
+              onChange={(j) => setEndTime(j.value)}
+              flex={1}
+            />
+          </Stack>
+          <Stack horizontal justifyContent="flex-start" alignItems="center">
             {timeError ? (
               <Text variant="caption" color={Colors.error}>
                 {timeError}
@@ -418,10 +403,7 @@ export function EditSubjectSheet({
           </Stack>
 
           {/* Reminder */}
-          <StyledDivider
-            borderBottomColor={Colors.border}
-            marginBottom={16}
-          />
+          <StyledDivider borderBottomColor={Colors.border} marginBottom={16} />
           <Stack
             flexDirection="row"
             alignItems="center"
@@ -449,35 +431,31 @@ export function EditSubjectSheet({
                 NOTIFY ME
               </Text>
               <Stack flexDirection="row" flexWrap="wrap" gap={8}>
-                {REMINDER_OPTIONS.filter((o) => o.value !== null).map(
-                  (opt) => {
-                    const active = reminder === opt.value;
-                    return (
-                      <StyledPressable
-                        key={opt.value}
-                        paddingHorizontal={14}
-                        paddingVertical={9}
-                        borderRadius={12}
-                        borderWidth={2}
-                        borderColor={
-                          active ? Colors.primary : Colors.border
-                        }
-                        backgroundColor={
-                          active ? Colors.primary + "15" : Colors.bgCard
-                        }
-                        onPress={() => setReminder(opt.value as number)}
+                {REMINDER_OPTIONS.filter((o) => o.value !== null).map((opt) => {
+                  const active = reminder === opt.value;
+                  return (
+                    <StyledPressable
+                      key={opt.value}
+                      paddingHorizontal={14}
+                      paddingVertical={9}
+                      borderRadius={12}
+                      borderWidth={2}
+                      borderColor={active ? Colors.primary : Colors.border}
+                      backgroundColor={
+                        active ? Colors.primary + "15" : Colors.bgCard
+                      }
+                      onPress={() => setReminder(opt.value as number)}
+                    >
+                      <Text
+                        variant="button"
+                        fontSize={13}
+                        color={active ? Colors.primary : Colors.textMuted}
                       >
-                        <Text
-                          variant="button"
-                          fontSize={13}
-                          color={active ? Colors.primary : Colors.textMuted}
-                        >
-                          {opt.label}
-                        </Text>
-                      </StyledPressable>
-                    );
-                  },
-                )}
+                        {opt.label}
+                      </Text>
+                    </StyledPressable>
+                  );
+                })}
               </Stack>
             </Stack>
           )}
@@ -500,104 +478,6 @@ export function EditSubjectSheet({
           </StyledPressable> */}
         </StyledForm>
       </ScrollView>
-
-      {/* Time pickers */}
-      <TimePicker
-        visible={showStart}
-        value={startTime}
-        title="Start time"
-        onSelect={(t) => {
-          setStartTime(t);
-          setShowStart(false);
-        }}
-        onClose={() => setShowStart(false)}
-      />
-      <TimePicker
-        visible={showEnd}
-        value={endTime}
-        title="End time"
-        onSelect={(t) => {
-          setEndTime(t);
-          setShowEnd(false);
-        }}
-        onClose={() => setShowEnd(false)}
-      />
-    </Popup>
-  );
-}
-
-// ─── Shared time picker ───────────────────────────────────────────────────────
-function TimePicker({
-  visible,
-  value,
-  onSelect,
-  onClose,
-  title,
-}: {
-  visible: boolean;
-  value: string;
-  onSelect: (t: string) => void;
-  onClose: () => void;
-  title: string;
-}) {
-  const Colors = useColors();
-  return (
-    <Popup
-      visible={visible}
-      onClose={onClose}
-      overlayColor="rgba(0,0,0,0.5)"
-      roundRadius={24}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "60%" }}
-    >
-      <Stack
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="space-between"
-        paddingHorizontal={20}
-        paddingVertical={14}
-        borderBottomWidth={1}
-        borderBottomColor={Colors.border}
-      >
-        <StyledPressable onPress={onClose}>
-          <Text variant="button" color={Colors.textMuted}>
-            Cancel
-          </Text>
-        </StyledPressable>
-        <Text variant="title" color={Colors.textPrimary}>
-          {title}
-        </Text>
-        <Stack width={60} />
-      </Stack>
-      <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
-        {TIME_OPTIONS.map((t) => (
-          <StyledPressable
-            key={t}
-            flexDirection="row"
-            alignItems="center"
-            justifyContent="space-between"
-            paddingHorizontal={20}
-            paddingVertical={14}
-            backgroundColor={
-              t === value ? Colors.primary + "12" : "transparent"
-            }
-            onPress={() => onSelect(t)}
-          >
-            <Text
-              variant="metric"
-              fontSize={17}
-              color={t === value ? Colors.primary : Colors.textPrimary}
-            >
-              {t}
-            </Text>
-            {t === value && (
-              <Text variant="button" color={Colors.primary}>
-                ✓
-              </Text>
-            )}
-          </StyledPressable>
-        ))}
-      </ScrollView>
-    </Popup>
+    </StyledPage>
   );
 }

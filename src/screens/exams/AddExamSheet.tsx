@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from "react";
 import { ScrollView } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { dismissKeyboardThenOpen } from "../../utils/keyboard";
 import {
   Stack,
   StyledPressable,
@@ -8,8 +10,11 @@ import {
   StyledDivider,
   Switch,
   StyledForm,
+  StyledPage,
+  StyledDropdown,
   Popup,
 } from "fluent-styles";
+import type { DropdownOptionItem } from "fluent-styles";
 import { toastService, loaderService } from "fluent-styles";
 import { format } from "date-fns";
 import { Text } from "../../components/text";
@@ -20,18 +25,28 @@ import { useExams } from "../../hooks/useExams";
 import { useSubjects } from "../../hooks";
 import { usePremium } from "../../hooks/usePremium";
 import { requestNotificationPermission } from "../../services/notificationService";
-import type { Subject } from "../../db/schema";
 
-interface AddExamSheetProps {
-  visible: boolean;
-  onClose: () => void;
-}
-
-export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
+// A real full screen (pushed via router), not a Popup/Modal — a transparent
+// RN Modal combined with an autofocused TextInput has a real-device-only
+// bug (not reproducible in the Simulator) where the keyboard's async,
+// separate-process show/hide on hardware can leave the modal content blank
+// until the keyboard dismisses. A plain screen has no Modal in the mix, so
+// there's nothing for the keyboard to desync with.
+export function AddExamSheet() {
   const Colors = useColors();
   const { create, data: allExams } = useExams();
-  const { data: subjects } = useSubjects();
+  const { data: subjects, refetch: refetchSubjects } = useSubjects();
   const premium = usePremium();
+
+  // Courses are created on a separate screen, so a subject added after this
+  // one mounted (e.g. via Quick Add -> Class, then back to Add Exam) needs
+  // a refetch on focus — the mount-time fetch alone would leave the picker
+  // stuck showing whatever existed when this screen first loaded.
+  useFocusEffect(
+    useCallback(() => {
+      refetchSubjects();
+    }, [refetchSubjects]),
+  );
 
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
@@ -41,29 +56,22 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
   const [reminder, setReminder] = useState<number | null>(null);
   const [reminderOn, setReminderOn] = useState(false);
   const [showDate, setShowDate] = useState(false);
-  const [showSubjects, setShowSubjects] = useState(false);
   const [touched, setTouched] = useState({ title: false });
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
-  const selectedSubject = subjects.find((s) => s.id === subjectId);
+  // "" stands in for "no course" — StyledDropdown's value is always a
+  // string, so null can't be represented directly.
+  const subjectOptions: DropdownOptionItem[] = [
+    { value: "", label: "No course" },
+    ...subjects.map((s) => ({ value: s.id, label: s.name })),
+  ];
 
   // Validation
-  const titleError = (touched.title || attemptedSubmit) && !title.trim() ? "Title is required" : null;
+  const titleError =
+    (touched.title || attemptedSubmit) && !title.trim()
+      ? "Title is required"
+      : null;
   const isValid = !!title.trim();
-
-  const reset = () => {
-    setTitle("");
-    setNotes("");
-    setRoom("");
-    setSubjectId(null);
-    setExamDate(new Date());
-    setReminder(null);
-    setReminderOn(false);
-    setShowDate(false);
-    setShowSubjects(false);
-    setTouched({ title: false });
-    setAttemptedSubmit(false);
-  };
 
   const handleReminderToggle = async (on: boolean) => {
     if (on) {
@@ -95,8 +103,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
         "Free limit reached",
         `Upgrade to Premium to add more than ${premium.limits.EXAMS} exams`,
       );
-      onClose();
-      const { router } = require("expo-router");
+      router.back();
       router.push("/premium");
       return;
     }
@@ -114,8 +121,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
         { label: "Saving…", variant: "spinner" },
       );
       toastService.success("Exam added!");
-      reset();
-      onClose();
+      router.back();
     } catch (err: any) {
       toastService.error("Failed to save", err?.message);
     }
@@ -129,25 +135,19 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
     subjectId,
     examDate,
     create,
-    onClose,
   ]);
 
   return (
-    <Popup
-      visible={visible}
-      onClose={() => { reset(); onClose(); }}
-      overlayColor="rgba(0,0,0,0.45)"
-      roundRadius={28}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "85%" }}
-    >
+    <StyledPage showStatusBar backgroundColor={Colors.bg}>
       {/* Header */}
-      <ModalFormHeader
-        title="Exam"
-        onCancel={() => { reset(); onClose(); }}
-        onSave={handleSave}
-        saveDisabled={!isValid}
-      />
+      <StyledPage.Header.Full>
+        <ModalFormHeader
+          title="New Exam"
+          onCancel={() => router.back()}
+          onSave={handleSave}
+          saveDisabled={!isValid}
+        />
+      </StyledPage.Header.Full>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
@@ -180,40 +180,14 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
         <StyledForm>
           {/* Subject picker */}
           <Stack gap={6} marginBottom={16}>
-            <Text variant="overline" color={Colors.textMuted}>
-              SUBJECT
-            </Text>
-            <StyledPressable
-              flexDirection="row"
-              alignItems="center"
-              justifyContent="space-between"
-              paddingHorizontal={16}
-              paddingVertical={14}
-              borderRadius={12}
-              backgroundColor={Colors.bgInput}
-              onPress={() => setShowSubjects(true)}
-            >
-              {selectedSubject ? (
-                <Stack flexDirection="row" alignItems="center" gap={10}>
-                  <Stack
-                    width={12}
-                    height={12}
-                    borderRadius={6}
-                    backgroundColor={selectedSubject.color}
-                  />
-                  <Text variant="label" color={Colors.textPrimary}>
-                    {selectedSubject.name}
-                  </Text>
-                </Stack>
-              ) : (
-                <Text variant="body" color={Colors.textMuted}>
-                  Select subject (optional)
-                </Text>
-              )}
-              <Text variant="body" color={Colors.textMuted}>
-                ›
-              </Text>
-            </StyledPressable>
+            <StyledDropdown
+              label="Course"
+              value={subjectId ?? ""}
+              placeholder="Select course (optional)"
+              data={subjectOptions}
+              clearable
+              onChange={(item) => setSubjectId(item?.value || null)}
+            />
           </Stack>
 
           {/* Date */}
@@ -229,7 +203,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
               paddingVertical={14}
               borderRadius={12}
               backgroundColor={Colors.bgInput}
-              onPress={() => setShowDate(true)}
+              onPress={() => dismissKeyboardThenOpen(() => setShowDate(true))}
             >
               <Text variant="label" color={Colors.textPrimary}>
                 📅 {format(examDate, "EEE, MMM d, yyyy")}
@@ -273,10 +247,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
           </Stack>
 
           {/* Reminder toggle */}
-          <StyledDivider
-            borderBottomColor={Colors.border}
-            marginBottom={16}
-          />
+          <StyledDivider borderBottomColor={Colors.border} marginBottom={16} />
           <Stack
             flexDirection="row"
             alignItems="center"
@@ -315,9 +286,7 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
                         paddingVertical={9}
                         borderRadius={12}
                         borderWidth={2}
-                        borderColor={
-                          active ? Colors.primary : Colors.border
-                        }
+                        borderColor={active ? Colors.primary : Colors.border}
                         backgroundColor={
                           active ? Colors.primary + "15" : Colors.bgCard
                         }
@@ -340,19 +309,8 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
         </StyledForm>
       </ScrollView>
 
-      {/* Subject picker popup */}
-      <SubjectPickerModal
-        visible={showSubjects}
-        subjects={subjects}
-        selected={subjectId}
-        onSelect={(id) => {
-          setSubjectId(id);
-          setShowSubjects(false);
-        }}
-        onClose={() => setShowSubjects(false)}
-      />
-
-      {/* Date picker popup */}
+      {/* Date picker popup — no TextInput inside, unaffected by the
+          Modal+keyboard bug, so this can stay a Popup. */}
       <Popup
         visible={showDate}
         onClose={() => setShowDate(false)}
@@ -398,118 +356,6 @@ export function AddExamSheet({ visible, onClose }: AddExamSheetProps) {
           />
         </Stack>
       </Popup>
-    </Popup>
-  );
-}
-
-// ─── Subject picker ────────────────────────────────────────────────────────────
-function SubjectPickerModal({
-  visible,
-  subjects,
-  selected,
-  onSelect,
-  onClose,
-}: {
-  visible: boolean;
-  subjects: Subject[];
-  selected: string | null;
-  onSelect: (id: string | null) => void;
-  onClose: () => void;
-}) {
-  const Colors = useColors();
-  return (
-    <Popup
-      visible={visible}
-      onClose={onClose}
-      overlayColor="rgba(0,0,0,0.5)"
-      roundRadius={24}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "60%" }}
-    >
-      <Stack
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="space-between"
-        paddingHorizontal={20}
-        paddingVertical={14}
-        borderBottomWidth={1}
-        borderBottomColor={Colors.border}
-      >
-        <StyledPressable onPress={onClose}>
-          <Text variant="button" color={Colors.textMuted}>
-            Cancel
-          </Text>
-        </StyledPressable>
-        <Text variant="title" color={Colors.textPrimary}>
-          Select subject
-        </Text>
-        <Stack width={60} />
-      </Stack>
-      <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
-        {/* No subject option */}
-        <StyledPressable
-          flexDirection="row"
-          alignItems="center"
-          gap={14}
-          paddingHorizontal={20}
-          paddingVertical={14}
-          backgroundColor={
-            !selected ? Colors.primary + "12" : "transparent"
-          }
-          onPress={() => onSelect(null)}
-        >
-          <Stack
-            width={12}
-            height={12}
-            borderRadius={6}
-            backgroundColor={Colors.textMuted}
-          />
-          <Text flex={1} variant="label" color={Colors.textMuted}>
-            No subject
-          </Text>
-          {!selected && (
-            <Text variant="button" color={Colors.primary}>
-              ✓
-            </Text>
-          )}
-        </StyledPressable>
-
-        {subjects.map((s) => (
-          <StyledPressable
-            key={s.id}
-            flexDirection="row"
-            alignItems="center"
-            gap={14}
-            paddingHorizontal={20}
-            paddingVertical={14}
-            backgroundColor={
-              selected === s.id ? Colors.primary + "12" : "transparent"
-            }
-            onPress={() => onSelect(s.id)}
-          >
-            <Stack
-              width={12}
-              height={12}
-              borderRadius={6}
-              backgroundColor={s.color}
-            />
-            <Text
-              flex={1}
-              variant={selected === s.id ? "label" : "body"}
-              color={
-                selected === s.id ? Colors.primary : Colors.textPrimary
-              }
-            >
-              {s.name}
-            </Text>
-            {selected === s.id && (
-              <Text variant="button" color={Colors.primary}>
-                ✓
-              </Text>
-            )}
-          </StyledPressable>
-        ))}
-      </ScrollView>
-    </Popup>
+    </StyledPage>
   );
 }

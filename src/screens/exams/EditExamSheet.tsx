@@ -1,5 +1,7 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { ScrollView } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { dismissKeyboardThenOpen } from "../../utils/keyboard";
 import {
   Stack,
   StyledPressable,
@@ -8,8 +10,11 @@ import {
   StyledDivider,
   Switch,
   StyledForm,
+  StyledPage,
+  StyledDropdown,
   Popup,
 } from "fluent-styles";
+import type { DropdownOptionItem } from "fluent-styles";
 import { toastService, loaderService, dialogueService } from "fluent-styles";
 import { format } from "date-fns";
 import { Text } from "../../components/text";
@@ -18,20 +23,34 @@ import { useColors } from "../../constants";
 import { EXAM_REMINDER_OPTIONS } from "../../constants";
 import { useExams } from "../../hooks/useExams";
 import { useSubjects } from "../../hooks";
+import { useAppStore } from "../../stores";
 import { requestNotificationPermission } from "../../services/notificationService";
-import type { Exam, Subject } from "../../db/schema";
+import { examService } from "../../services/examService";
+import type { Exam } from "../../db/schema";
 
 interface EditExamSheetProps {
-  exam: Exam | null;
-  visible: boolean;
-  onClose: () => void;
+  examId: string;
 }
 
-export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
+// A real full screen (pushed via router), not a Popup/Modal — see
+// AddExamSheet for why: a transparent RN Modal + a focused TextInput has a
+// real-device-only keyboard/rendering bug that a plain screen sidesteps
+// entirely.
+export function EditExamSheet({ examId }: EditExamSheetProps) {
   const Colors = useColors();
   const { update, remove } = useExams();
-  const { data: subjects } = useSubjects();
+  const { data: subjects, refetch: refetchSubjects } = useSubjects();
+  const invalidateData = useAppStore((s) => s.invalidateData);
 
+  // See AddExamSheet — a course added after this screen mounted needs a
+  // refetch on focus, or the picker keeps showing the mount-time list.
+  useFocusEffect(
+    useCallback(() => {
+      refetchSubjects();
+    }, [refetchSubjects]),
+  );
+
+  const [exam, setExam] = useState<Exam | null>(null);
   const [title, setTitle] = useState("");
   const [notes, setNotes] = useState("");
   const [room, setRoom] = useState("");
@@ -40,26 +59,32 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
   const [reminder, setReminder] = useState<number | null>(null);
   const [reminderOn, setReminderOn] = useState(false);
   const [showDate, setShowDate] = useState(false);
-  const [showSubjects, setShowSubjects] = useState(false);
   const [touched, setTouched] = useState({ title: false });
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
   useEffect(() => {
-    if (exam) {
-      setTitle(exam.title);
-      setNotes(exam.notes ?? "");
-      setRoom(exam.room ?? "");
-      setSubjectId(exam.subjectId ?? null);
-      setExamDate(new Date(exam.date));
-      const hasReminder = exam.reminder !== null && exam.reminder !== undefined;
-      setReminder(hasReminder ? exam.reminder : null);
+    examService.getById(examId).then((e) => {
+      if (!e) return;
+      setExam(e);
+      setTitle(e.title);
+      setNotes(e.notes ?? "");
+      setRoom(e.room ?? "");
+      setSubjectId(e.subjectId ?? null);
+      setExamDate(new Date(e.date));
+      const hasReminder = e.reminder !== null && e.reminder !== undefined;
+      setReminder(hasReminder ? e.reminder : null);
       setReminderOn(hasReminder);
       setTouched({ title: false });
       setAttemptedSubmit(false);
-    }
-  }, [exam]);
+    });
+  }, [examId]);
 
-  const selectedSubject = subjects.find((s) => s.id === subjectId);
+  // "" stands in for "no course" — StyledDropdown's value is always a
+  // string, so null can't be represented directly.
+  const subjectOptions: DropdownOptionItem[] = [
+    { value: "", label: "No course" },
+    ...subjects.map((s) => ({ value: s.id, label: s.name })),
+  ];
 
   // Validation
   const titleError = (touched.title || attemptedSubmit) && !title.trim() ? "Title is required" : null;
@@ -105,12 +130,13 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
           }),
         { label: "Saving…", variant: "spinner" },
       );
+      invalidateData();
       toastService.success("Exam updated!");
-      onClose();
+      router.back();
     } catch (err: any) {
       toastService.error("Failed to save", err?.message);
     }
-  }, [exam, isValid, title, notes, room, subjectId, examDate, reminderOn, reminder, update, onClose]);
+  }, [exam, isValid, title, notes, room, subjectId, examDate, reminderOn, reminder, update, invalidateData]);
 
   const handleDelete = useCallback(async () => {
     if (!exam) return;
@@ -127,28 +153,22 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
         label: "Deleting…",
         variant: "spinner",
       });
+      invalidateData();
       toastService.success("Exam deleted");
-      onClose();
+      router.back();
     } catch (err: any) {
       toastService.error("Failed to delete", err?.message);
     }
-  }, [exam, remove, onClose]);
+  }, [exam, remove, invalidateData]);
 
   if (!exam) return null;
 
   return (
-    <Popup
-      visible={visible}
-      onClose={onClose}
-      overlayColor="rgba(0,0,0,0.45)"
-      roundRadius={28}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "85%" }}
-    >
+    <StyledPage backgroundColor={Colors.bg}>
       {/* Header */}
       <ModalFormHeader
         title="Edit Exam"
-        onCancel={onClose}
+        onCancel={() => router.back()}
         onSave={handleSave}
         saveDisabled={!isValid}
       />
@@ -182,40 +202,14 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
         <StyledForm>
           {/* Subject picker */}
           <Stack gap={6} marginBottom={16}>
-            <Text variant="overline" color={Colors.textMuted}>
-              SUBJECT
-            </Text>
-            <StyledPressable
-              flexDirection="row"
-              alignItems="center"
-              justifyContent="space-between"
-              paddingHorizontal={16}
-              paddingVertical={14}
-              borderRadius={12}
-              backgroundColor={Colors.bgInput}
-              onPress={() => setShowSubjects(true)}
-            >
-              {selectedSubject ? (
-                <Stack flexDirection="row" alignItems="center" gap={10}>
-                  <Stack
-                    width={12}
-                    height={12}
-                    borderRadius={6}
-                    backgroundColor={selectedSubject.color}
-                  />
-                  <Text variant="label" color={Colors.textPrimary}>
-                    {selectedSubject.name}
-                  </Text>
-                </Stack>
-              ) : (
-                <Text variant="body" color={Colors.textMuted}>
-                  Select subject (optional)
-                </Text>
-              )}
-              <Text variant="body" color={Colors.textMuted}>
-                ›
-              </Text>
-            </StyledPressable>
+            <StyledDropdown
+              label="Course"
+              value={subjectId ?? ""}
+              placeholder="Select course (optional)"
+              data={subjectOptions}
+              clearable
+              onChange={(item) => setSubjectId(item?.value || null)}
+            />
           </Stack>
 
           {/* Date */}
@@ -231,7 +225,7 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
               paddingVertical={14}
               borderRadius={12}
               backgroundColor={Colors.bgInput}
-              onPress={() => setShowDate(true)}
+              onPress={() => dismissKeyboardThenOpen(() => setShowDate(true))}
             >
               <Text variant="label" color={Colors.textPrimary}>
                 📅 {format(examDate, "EEE, MMM d, yyyy")}
@@ -356,19 +350,8 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
         </StyledForm>
       </ScrollView>
 
-      {/* Subject picker popup */}
-      <SubjectPickerModal
-        visible={showSubjects}
-        subjects={subjects}
-        selected={subjectId}
-        onSelect={(id) => {
-          setSubjectId(id);
-          setShowSubjects(false);
-        }}
-        onClose={() => setShowSubjects(false)}
-      />
-
-      {/* Date picker popup */}
+      {/* Date picker popup — no TextInput inside, unaffected by the
+          Modal+keyboard bug, so this can stay a Popup. */}
       <Popup
         visible={showDate}
         onClose={() => setShowDate(false)}
@@ -414,116 +397,6 @@ export function EditExamSheet({ exam, visible, onClose }: EditExamSheetProps) {
           />
         </Stack>
       </Popup>
-    </Popup>
-  );
-}
-
-// ─── Subject picker ────────────────────────────────────────────────────────────
-function SubjectPickerModal({
-  visible,
-  subjects,
-  selected,
-  onSelect,
-  onClose,
-}: {
-  visible: boolean;
-  subjects: Subject[];
-  selected: string | null;
-  onSelect: (id: string | null) => void;
-  onClose: () => void;
-}) {
-  const Colors = useColors();
-  return (
-    <Popup
-      visible={visible}
-      onClose={onClose}
-      overlayColor="rgba(0,0,0,0.5)"
-      roundRadius={24}
-      colors={{ background: Colors.bgCard, handle: Colors.border }}
-      style={{ maxHeight: "60%" }}
-    >
-      <Stack
-        flexDirection="row"
-        alignItems="center"
-        justifyContent="space-between"
-        paddingHorizontal={20}
-        paddingVertical={14}
-        borderBottomWidth={1}
-        borderBottomColor={Colors.border}
-      >
-        <StyledPressable onPress={onClose}>
-          <Text variant="button" color={Colors.textMuted}>
-            Cancel
-          </Text>
-        </StyledPressable>
-        <Text variant="title" color={Colors.textPrimary}>
-          Select subject
-        </Text>
-        <Stack width={60} />
-      </Stack>
-      <ScrollView contentContainerStyle={{ paddingVertical: 8 }}>
-        <StyledPressable
-          flexDirection="row"
-          alignItems="center"
-          gap={14}
-          paddingHorizontal={20}
-          paddingVertical={14}
-          backgroundColor={
-            !selected ? Colors.primary + "12" : "transparent"
-          }
-          onPress={() => onSelect(null)}
-        >
-          <Stack
-            width={12}
-            height={12}
-            borderRadius={6}
-            backgroundColor={Colors.textMuted}
-          />
-          <Text flex={1} variant="label" color={Colors.textMuted}>
-            No subject
-          </Text>
-          {!selected && (
-            <Text variant="button" color={Colors.primary}>
-              ✓
-            </Text>
-          )}
-        </StyledPressable>
-        {subjects.map((s) => (
-          <StyledPressable
-            key={s.id}
-            flexDirection="row"
-            alignItems="center"
-            gap={14}
-            paddingHorizontal={20}
-            paddingVertical={14}
-            backgroundColor={
-              selected === s.id ? Colors.primary + "12" : "transparent"
-            }
-            onPress={() => onSelect(s.id)}
-          >
-            <Stack
-              width={12}
-              height={12}
-              borderRadius={6}
-              backgroundColor={s.color}
-            />
-            <Text
-              flex={1}
-              variant={selected === s.id ? "label" : "body"}
-              color={
-                selected === s.id ? Colors.primary : Colors.textPrimary
-              }
-            >
-              {s.name}
-            </Text>
-            {selected === s.id && (
-              <Text variant="button" color={Colors.primary}>
-                ✓
-              </Text>
-            )}
-          </StyledPressable>
-        ))}
-      </ScrollView>
-    </Popup>
+    </StyledPage>
   );
 }
