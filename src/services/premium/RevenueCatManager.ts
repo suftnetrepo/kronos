@@ -56,7 +56,7 @@ const KRONOS_PRODUCT_IDS = {
 // authenticates against App Store Connect/StoreKit, so reusing it on Android
 // would fail there. Each platform needs its own key from the RevenueCat
 // dashboard (Project settings → API keys), tied to that platform's app.
-const ANDROID_PRODUCTION_KEY = 'goog_REPLACE_WITH_GOOGLE_PLAY_KEY'
+const ANDROID_PRODUCTION_KEY = 'goog_KGUBlNTQiCjFqjEiNUEWZzCzeJL'
 
 const REVENUECAT_API_KEY =
   isExpoGo
