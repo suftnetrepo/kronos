@@ -49,6 +49,7 @@
       "expo-router",
       "expo-sqlite",
       "./plugins/withFmtConstevalFix.js",
+      "./plugins/withAndroidReleaseSigning.js",
       [
         "expo-notifications",
         {
