@@ -1,3 +1,4 @@
+import { Platform } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import type { Subject, Day }  from '../db/schema'
 import { DAY_FULL }            from '../db/schema'
@@ -14,6 +15,22 @@ Notifications.setNotificationHandler({
     shouldSetBadge:  false,
   }),
 })
+
+// ─── Android notification channel ─────────────────────────────────────────
+// Android 8+ (API 26+) won't post a heads-up/sound notification without a
+// channel — without this, reminders would silently fall back to a mute,
+// low-priority default channel instead of actually alerting. iOS has no
+// concept of channels, so this is a no-op there. Call once at app startup,
+// before any reminder gets scheduled.
+export const ensureAndroidNotificationChannel = async (): Promise<void> => {
+  if (Platform.OS !== 'android') return
+  await Notifications.setNotificationChannelAsync('reminders', {
+    name: 'Reminders',
+    importance: Notifications.AndroidImportance.HIGH,
+    vibrationPattern: [0, 250, 250, 250],
+    sound: 'default',
+  })
+}
 
 // ─── Day of week mapping ──────────────────────────────────────────────────────
 const DAY_TO_WEEKDAY: Record<Day, 1|2|3|4|5|6|7> = {

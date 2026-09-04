@@ -23,6 +23,7 @@
  *
  * See: https://docs.revenuecat.com/docs/configuring-products
  */
+import { Platform } from 'react-native'
 import * as SecureStore from 'expo-secure-store'
 import Constants, { ExecutionEnvironment } from 'expo-constants'
 import type { IPurchaseManager, EntitlementInfo, PremiumPlan } from './IPurchaseManager'
@@ -51,11 +52,20 @@ const KRONOS_PRODUCT_IDS = {
 // ─── RevenueCat Configuration ──────────────────────────────────────────────
 // Entitlement identifier: "premium"
 // Offering identifier: "default"
-// API Keys: Test Store (dev) → Production (app store submission)
+// API Keys: RevenueCat issues a separate key per store — an "appl_" key only
+// authenticates against App Store Connect/StoreKit, so reusing it on Android
+// would fail there. Each platform needs its own key from the RevenueCat
+// dashboard (Project settings → API keys), tied to that platform's app.
+const ANDROID_PRODUCTION_KEY = 'goog_REPLACE_WITH_GOOGLE_PLAY_KEY'
+
 const REVENUECAT_API_KEY =
   isExpoGo
     ? 'test_OiqxogdQQQsphMbZeRymGfZeery'
-    : 'appl_IAsJlKwTlgGIqbleOBLmAyRoJQj'
+    : Platform.select({
+        ios: 'appl_IAsJlKwTlgGIqbleOBLmAyRoJQj',
+        android: ANDROID_PRODUCTION_KEY,
+        default: '',
+      })!
 
 // ─── State ────────────────────────────────────────────────────────────────
 
@@ -72,6 +82,13 @@ export class RevenueCatManager implements IPurchaseManager {
         console.log('[RevenueCatManager] Already initialized, skipping')
       }
       return
+    }
+
+    if (!isExpoGo && Platform.OS === 'android' && REVENUECAT_API_KEY === ANDROID_PRODUCTION_KEY) {
+      throw new Error(
+        '[RevenueCatManager] ANDROID_PRODUCTION_KEY is still the placeholder. ' +
+        'Set it to the Google Play API key from the RevenueCat dashboard before shipping an Android build.'
+      )
     }
 
     try {

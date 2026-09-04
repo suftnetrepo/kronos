@@ -14,7 +14,7 @@ import { ErrorBoundary } from "../src/components/ErrorBoundary";
 import { runMigrations } from "../src/db";
 import { useThemeStore, usePremiumStore, useSettingsStore, usePurchaseReadinessStore } from "../src/stores";
 import { getEntitlement } from "../src/services/premiumService";
-import { rescheduleAllReminders } from "../src/services/notificationService";
+import { rescheduleAllReminders, ensureAndroidNotificationChannel } from "../src/services/notificationService";
 import { initializePurchaseManager } from "../src/config/premium.config";
 
 SplashScreen.preventAutoHideAsync();
@@ -91,6 +91,9 @@ export default function RootLayout() {
         setEntitlement(entitlement.isActive, entitlement.plan);
         await runMigrations();
         await hydrateSettings();
+        // Android needs a channel to exist before it'll post an alerting
+        // (sound/heads-up) notification — no-op on iOS.
+        await ensureAndroidNotificationChannel();
         // Reschedule reminders on app startup
         await rescheduleAllReminders();
       } catch (e) {
