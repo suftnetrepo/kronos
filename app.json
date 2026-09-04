@@ -39,7 +39,7 @@
         "backgroundColor": "#4F46E5"
       },
       "package": "com.kronos.timetable",
-      "versionCode": 2,
+      "versionCode": 4,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
