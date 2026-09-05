@@ -56,7 +56,11 @@ const KRONOS_PRODUCT_IDS = {
 // authenticates against App Store Connect/StoreKit, so reusing it on Android
 // would fail there. Each platform needs its own key from the RevenueCat
 // dashboard (Project settings → API keys), tied to that platform's app.
-const ANDROID_PRODUCTION_KEY = 'goog_KGUBlNTQiCjFqjEiNUEWZzCzeJL'
+const ANDROID_PLACEHOLDER_KEY = 'goog_REPLACE_WITH_GOOGLE_PLAY_KEY'
+// Widened to `string` — otherwise TS narrows both consts to their literal
+// types and flags the placeholder-guard comparison below as an "always
+// false" type error, which defeats the point of the check.
+const ANDROID_PRODUCTION_KEY: string = 'goog_KGUBlNTQiCjFqjEiNUEWZzCzeJL'
 
 const REVENUECAT_API_KEY =
   isExpoGo
@@ -84,7 +88,7 @@ export class RevenueCatManager implements IPurchaseManager {
       return
     }
 
-    if (!isExpoGo && Platform.OS === 'android' && REVENUECAT_API_KEY === ANDROID_PRODUCTION_KEY) {
+    if (!isExpoGo && Platform.OS === 'android' && ANDROID_PRODUCTION_KEY === ANDROID_PLACEHOLDER_KEY) {
       throw new Error(
         '[RevenueCatManager] ANDROID_PRODUCTION_KEY is still the placeholder. ' +
         'Set it to the Google Play API key from the RevenueCat dashboard before shipping an Android build.'
