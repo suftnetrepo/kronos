@@ -22,9 +22,6 @@
       "bundleIdentifier": "com.kronos.timetable",
       "buildNumber": "1",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Kronos uses Face ID to keep your timetable secure.",
-        "NSCameraUsageDescription": "Kronos uses the camera to scan timetable QR codes.",
-        "NSPhotoLibraryUsageDescription": "Kronos saves timetable QR codes to your photo library.",
         "NSDocumentsFolderUsageDescription": "Kronos reads timetable files you choose to import.",
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocalNetworkUsageDescription": "Kronos uses your local network during development to connect to the Metro bundler on your computer. This code path doesn't run in release builds.",
@@ -39,15 +36,11 @@
         "backgroundColor": "#4F46E5"
       },
       "package": "com.kronos.timetable",
-      "versionCode": 10,
+      "versionCode": 11,
       "permissions": [
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE",
-        "SCHEDULE_EXACT_ALARM",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE",
-        "USE_BIOMETRIC",
-        "USE_FINGERPRINT"
+        "SCHEDULE_EXACT_ALARM"
       ]
     },
     "plugins": [
@@ -61,12 +54,6 @@
           "icon": "./assets/icon.png",
           "color": "#4F46E5",
           "sounds": []
-        }
-      ],
-      [
-        "expo-local-authentication",
-        {
-          "faceIDPermission": "Kronos uses Face ID to keep your timetable secure."
         }
       ],
       [
