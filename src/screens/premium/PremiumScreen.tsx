@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, ActivityIndicator, Linking } from "react-native";
+import { ScrollView, ActivityIndicator, Linking, Platform } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Stack, StyledPressable, StyledCard } from "fluent-styles";
 import { Text } from "../../components";
@@ -430,7 +430,7 @@ export default function PremiumScreen() {
               textAlign="center"
               lineHeight={18}
             >
-              7-day free trial, then £5.99/year.{"\n"}
+              7-day free trial, then {PREMIUM_PRICING.YEARLY.price}/year.{"\n"}
               Subscription automatically renews unless cancelled at least 24
               hours before the end of the trial.
             </Text>
@@ -443,7 +443,7 @@ export default function PremiumScreen() {
               textAlign="center"
               lineHeight={18}
             >
-              £1.99/month. Subscription automatically renews unless cancelled at
+              {PREMIUM_PRICING.MONTHLY.price}/month. Subscription automatically renews unless cancelled at
               least 24 hours before renewal.
             </Text>
           )}
@@ -485,7 +485,9 @@ export default function PremiumScreen() {
               textAlign="center"
               lineHeight={16}
             >
-              Payment charged to your Apple ID at confirmation.
+              {Platform.OS === "ios"
+                ? "Payment charged to your Apple ID at confirmation."
+                : "Payment charged to your Google Play account at confirmation."}
             </Text>
 
             <Stack
